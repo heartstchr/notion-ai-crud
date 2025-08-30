@@ -18,8 +18,7 @@
       </p>
 
       <div class="flex justify-center gap-4 flex-wrap">
-        <Button @click="refreshSchema" :disabled="loading" severity="secondary" icon="pi pi-refresh"
-          label="Refresh" />
+        <Button @click="refreshSchema" :disabled="loading" severity="secondary" icon="pi pi-refresh" label="Refresh" />
         <Button @click="openAddForm" icon="pi pi-plus" label="Add" />
       </div>
     </div>
@@ -372,7 +371,7 @@ const openAddForm = async () => {
     showAddForm.value = true
     formData.value = {}
     formErrors.value = {}
-  } catch (error) {
+  } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load database schema', life: 3000 })
   }
 }
@@ -390,8 +389,7 @@ const editTalent = async (talent) => {
     editingTalent.value = talent
     formData.value = { ...talent }
     formErrors.value = {}
-  } catch (error) {
-    console.error('Failed to load schema for editing:', error)
+  } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load database schema', life: 3000 })
   }
 }
