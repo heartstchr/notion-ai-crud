@@ -6,9 +6,9 @@ import { RouterView } from 'vue-router'
   <div id="app">
     <nav class="navbar">
       <div class="nav-container">
-        <router-link to="/" class="nav-brand">Stack Seekers</router-link>
+        <router-link to="/" class="nav-brand">Talent Pool Manager</router-link>
         <div class="nav-links">
-          <router-link to="/client-form" class="nav-link">Client Form</router-link>
+          <router-link to="/" class="nav-link">Talent Pool</router-link>
         </div>
       </div>
     </nav>
