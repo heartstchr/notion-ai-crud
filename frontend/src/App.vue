@@ -3,73 +3,25 @@ import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <div id="app">
-    <nav class="navbar">
-      <div class="nav-container">
-        <router-link to="/" class="nav-brand">Talent Pool Manager</router-link>
-        <div class="nav-links">
-          <router-link to="/" class="nav-link">Talent Pool</router-link>
+  <div id="app" class="min-h-screen bg-gray-50">
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <router-link to="/" class="text-xl font-bold text-gray-900 hover:text-primary-600 transition-colors">
+            Talent Pool Manager
+          </router-link>
+          <div class="flex space-x-8">
+          </div>
         </div>
       </div>
     </nav>
 
-    <main class="main-content">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <RouterView />
     </main>
   </div>
 </template>
 
 <style scoped>
-#app {
-  min-height: 100vh;
-}
-
-.navbar {
-  background-color: #2c3e50;
-  padding: 1rem 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.nav-brand {
-  color: white;
-  text-decoration: none;
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.nav-links {
-  display: flex;
-  gap: 20px;
-}
-
-.nav-link {
-  color: white;
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: background-color 0.3s;
-}
-
-.nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.nav-link.router-link-active {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.main-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
+/* Additional custom styles if needed */
 </style>
