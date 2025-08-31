@@ -7,10 +7,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center items-center py-16">
-      <div class="spinner"></div>
-      <span class="ml-3 text-gray-600">Loading form...</span>
-    </div>
+    <LoadingSkeleton v-if="loading" :count="1" />
 
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
@@ -41,6 +38,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useTalentStore } from '../stores/talentStore.js'
+import LoadingSkeleton from '../components/LoadingSkeleton.vue'
 
 // Composables
 const router = useRouter()

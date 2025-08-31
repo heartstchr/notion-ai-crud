@@ -2,14 +2,14 @@
   <form @submit.prevent="submitForm" class="space-y-6">
     <!-- Loading State for Schema -->
     <div v-if="!schema && !loading" class="text-center py-8 text-gray-500">
-      <div class="spinner w-8 h-8 mx-auto mb-4"></div>
+      <div class="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-blue-600 mx-auto mb-4"></div>
       <p>Loading database schema...</p>
       <Button @click="refreshSchema" severity="secondary" label="Retry" class="mt-2" />
     </div>
 
     <!-- Schema Loading State -->
     <div v-else-if="loading" class="text-center py-8 text-gray-500">
-      <div class="spinner w-8 h-8 mx-auto mb-4"></div>
+      <div class="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-blue-600 mx-auto mb-4"></div>
       <p>Loading database schema...</p>
     </div>
 
@@ -23,7 +23,8 @@
 
 
       <div v-for="field in formFields" :key="field.name" class="space-y-2">
-        <label :for="field.name" class="block text-sm font-medium text-gray-700">
+        <!-- Only show label for non-checkbox fields -->
+        <label v-if="field.type !== 'checkbox'" :for="field.name" class="block text-sm font-medium text-gray-700 mt-4">
           <!-- Display emoji if available -->
           <span v-if="field.emoji" class="mr-2 text-lg">{{ field.emoji }}</span>
           <!-- Display icon if available -->
@@ -89,41 +90,25 @@
           @update:model-value="(value) => updateMultiselectField(field.name, value)"
           :options="getMultiselectOptions(field, getMultiselectValue(field.name))" optionLabel="label"
           optionValue="value" :placeholder="`Select ${field.label}`" :class="{ 'p-invalid': formErrors[field.name] }"
-          class="w-full" :filter="true" :allowEmpty="true">
+          class="w-full" :filter="true" :allowEmpty="true" display="chip">
           <template #option="slotProps">
-            <div class="flex items-center gap-2">
-              <span v-if="slotProps.option.color" :class="getColorIndicator(slotProps.option.color)"
-                class="w-3 h-3 rounded-full"></span>
+            <div class="flex items-center gap-2 px-2 py-1 rounded"
+              :class="getOptionBackgroundClasses(slotProps.option)">
               <span>{{ slotProps.option.label }}</span>
             </div>
           </template>
           <template #chip="slotProps">
-            <div class="flex items-center gap-2">
-              <span v-if="slotProps.value.color" :class="getColorIndicator(slotProps.value.color)"
-                class="w-3 h-3 rounded-full"></span>
-              <span>{{ slotProps.value.label }}</span>
+            <div class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-full border font-medium"
+              :class="getOptionClasses(slotProps.value, field, props.schema)">
+              <span>{{ typeof slotProps.value === 'string' ? slotProps.value : slotProps.value?.label ||
+                slotProps.value?.value || slotProps.value }}</span>
+              <button type="button" @click="removeMultiselectItem(field.name, slotProps.value || slotProps)"
+                class="ml-1 hover:opacity-75">
+                <i class="pi pi-times text-xs"></i>
+              </button>
             </div>
           </template>
         </MultiSelect>
-
-        <!-- Display selected multi-select options with colors -->
-        <div v-if="field.type === 'multiselect' && getMultiselectValue(field.name).length > 0" class="mt-2">
-          <div class="flex flex-wrap gap-2">
-            <span v-for="option in getMultiselectValue(field.name)" :key="option"
-              :class="getOptionClasses(option, field, props.schema)"
-              class="px-3 py-1.5 text-sm rounded-full border font-medium">
-              {{ typeof option === 'string' ? option : option?.label || option?.value || option }}
-            </span>
-          </div>
-
-
-        </div>
-
-
-
-
-
-
 
         <!-- Checkbox -->
         <div v-else-if="field.type === 'checkbox'" class="flex items-center gap-3">
@@ -234,6 +219,59 @@ const updateMultiselectField = (fieldName, value) => {
   emit('update:formData', { ...props.formData, [fieldName]: arrayValue })
 }
 
+const removeMultiselectItem = (fieldName, itemToRemove) => {
+  const currentValue = getMultiselectValue(fieldName)
+  const updatedValue = currentValue.filter(item => {
+    // Handle both string and object comparisons
+    if (typeof item === 'string' && typeof itemToRemove === 'string') {
+      return item !== itemToRemove
+    } else if (typeof item === 'object' && typeof itemToRemove === 'object') {
+      return item.value !== itemToRemove.value
+    }
+    return item !== itemToRemove
+  })
+  updateMultiselectField(fieldName, updatedValue)
+}
+
+const getChipClasses = (value) => {
+  console.log('getChipClasses called with value:', value)
+
+  if (!value) {
+    console.log('No value provided, using default blue')
+    return 'bg-blue-100 text-blue-800'
+  }
+
+  if (!value.color) {
+    console.log('No color property found, using default blue')
+    return 'bg-blue-100 text-blue-800'
+  }
+
+  console.log('Color found:', value.color)
+
+  // Map Notion colors to Tailwind classes
+  const colorMap = {
+    'default': 'bg-gray-100 text-gray-800',
+    'gray': 'bg-gray-100 text-gray-800',
+    'brown': 'bg-amber-100 text-amber-800',
+    'orange': 'bg-orange-100 text-orange-800',
+    'yellow': 'bg-yellow-100 text-yellow-800',
+    'green': 'bg-green-100 text-green-800',
+    'blue': 'bg-blue-100 text-blue-800',
+    'purple': 'bg-purple-100 text-purple-800',
+    'pink': 'bg-pink-100 text-pink-800',
+    'red': 'bg-red-100 text-red-800'
+  }
+
+  const result = colorMap[value.color] || 'bg-blue-100 text-blue-800'
+  console.log('Returning classes:', result)
+  return result
+}
+
+const getOptionBackgroundClasses = (option) => {
+  // Always use white background for dropdown options
+  return 'bg-white text-gray-800 hover:bg-gray-50'
+}
+
 
 
 
@@ -266,20 +304,5 @@ const refreshSchema = () => {
 </script>
 
 <style scoped>
-.spinner {
-  border: 2px solid #e5e7eb;
-  border-top: 2px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
+/* Component-specific styles only - form field styling moved to theme level */
 </style>

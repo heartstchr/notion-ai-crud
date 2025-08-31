@@ -9,14 +9,13 @@
             Back to Pool
           </button>
         </div>
-        <h1 class="text-3xl font-bold text-gray-900">Edit Talent Profile</h1>
-        <p class="text-gray-600 mt-2">Update the talent profile information below</p>
+        <h1 class="text-3xl font-bold text-gray-900">Edit {{ databaseTitle }}</h1>
+        <p class="text-gray-600 mt-2">Update the {{ databaseTitle }} information below</p>
       </div>
 
       <!-- Loading State -->
-      <div v-if="loading" class="text-center py-16">
-        <div class="spinner w-8 h-8 mx-auto mb-4"></div>
-        <p class="text-gray-500">Loading talent profile...</p>
+      <div v-if="loading">
+        <LoadingSkeleton :count="1" container-class="bg-white rounded-lg shadow-sm border border-gray-200 p-6" />
       </div>
 
       <!-- Error State -->
@@ -44,7 +43,7 @@
       <div v-else-if="!talent && !loading" class="text-center py-16">
         <div class="text-6xl mb-4">❌</div>
         <h3 class="text-2xl font-semibold text-gray-900 mb-2">Talent Not Found</h3>
-        <p class="text-gray-600 mb-6">The talent profile you're looking for doesn't exist or has been removed.</p>
+        <p class="text-gray-600 mb-6">The {{ databaseTitle }} you're looking for doesn't exist or has been removed.</p>
         <button @click="goBack" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
           Back to Pool
         </button>
@@ -57,10 +56,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useTalentStore } from '../stores/talentStore.js'
+import LoadingSkeleton from '../components/LoadingSkeleton.vue'
 
 // Composables
 const route = useRoute()
@@ -80,6 +80,7 @@ const submitting = computed(() => talentStore.submitting)
 const talent = ref(null)
 const formData = ref({})
 const formErrors = ref({})
+const databaseTitle = ref('Talent Profile')
 
 // Computed
 const formFields = computed(() => {
@@ -92,19 +93,38 @@ const loadTalent = async () => {
   try {
     const talentId = route.params.id
 
-    // Load talent data and schema from store
-    const talentResult = await talentStore.fetchTalent(talentId)
-    talent.value = talentResult
+    if (!talentId) {
+      console.error('No talent ID provided')
+      return
+    }
 
-    // Ensure schema is loaded
+    // Ensure schema is loaded first
     if (!talentStore.schema) {
       await talentStore.fetchSchema()
     }
 
+    // Load talent data from store
+    const talentResult = await talentStore.fetchTalent(talentId)
+
+    if (!talentResult) {
+      console.error('Talent not found')
+      talent.value = null // Ensure talent is null so the "not found" UI shows
+      return
+    }
+
+    talent.value = talentResult
+
     // Initialize form data with normalized values
     formData.value = normalizeTalentData(talent.value, talentStore.schema)
+
+    // Update database title from store
+    const dbInfo = talentStore.getDatabaseInfo()
+    if (dbInfo && dbInfo.title) {
+      databaseTitle.value = dbInfo.title
+    }
   } catch (err) {
     console.error('Error loading talent:', err)
+    // Error is already set in the store, no need to set it again
   }
 }
 
@@ -234,6 +254,13 @@ const submitForm = async () => {
 const goBack = () => {
   router.push('/')
 }
+
+// Watch for route parameter changes
+watch(() => route.params.id, (newId) => {
+  if (newId) {
+    loadTalent()
+  }
+})
 
 // Lifecycle
 onMounted(() => {

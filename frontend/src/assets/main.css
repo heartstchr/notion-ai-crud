@@ -1,90 +1,111 @@
 @import 'tailwindcss';
 
 /* Custom component styles */
-@layer components {
-  .btn {
-    padding: 1rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    outline: none;
-  }
-
-  .btn-primary {
-    background-color: #2563eb;
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background-color: #1d4ed8;
-  }
-
-  .btn-secondary {
-    background-color: #e5e7eb;
-    color: #374151;
-  }
-
-  .btn-secondary:hover {
-    background-color: #d1d5db;
-  }
-
-  .btn-ghost {
-    background-color: transparent;
-    color: #6b7280;
-  }
-
-  .btn-ghost:hover {
-    background-color: #f9fafb;
-    color: #374151;
-  }
-
-  .btn-danger {
-    color: #dc2626;
-  }
-
-  .btn-danger:hover {
-    color: #b91c1c;
-    background-color: #fef2f2;
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    outline: none;
-  }
-
-  .form-input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  }
-
-  .form-label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 0.5rem;
-  }
-
-  .card {
-    background-color: white;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e7eb;
-  }
-
-  .spinner {
-    animation: spin 1s linear infinite;
-    border-radius: 50%;
-    border: 2px solid #d1d5db;
-    border-top-color: #2563eb;
-  }
-}
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* PrimeVue Form Field Theme Customization */
+/* Input styling - grey background with black text */
+.p-inputtext,
+.p-inputnumber-input,
+.p-calendar-input,
+.p-dropdown,
+.p-multiselect,
+.p-inputtextarea,
+.p-multiselect-label-container,
+.p-multiselect-label,
+.p-multiselect-token,
+.p-multiselect-token-label {
+  background-color: #f3f4f6 !important;
+  color: #000000 !important;
+  border-color: #d1d5db !important;
+}
+
+.p-inputtext:focus,
+.p-inputnumber-input:focus,
+.p-calendar-input:focus,
+.p-dropdown:focus,
+.p-multiselect:focus,
+.p-inputtextarea:focus {
+  background-color: #f3f4f6 !important;
+  color: #000000 !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 1px #3b82f6 !important;
+}
+
+/* Additional multiselect styling */
+.p-multiselect-label-container {
+  background-color: #f3f4f6 !important;
+}
+
+.p-multiselect-label {
+  color: #000000 !important;
+}
+
+.p-multiselect-token {
+  border-radius: 9999px !important;
+  padding: 0.25rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.p-multiselect-token-label {
+  font-weight: 500 !important;
+}
+
+.p-multiselect-token-icon {
+  cursor: pointer !important;
+}
+
+/* Placeholder text styling */
+.p-inputtext::placeholder,
+.p-inputnumber-input::placeholder,
+.p-calendar-input::placeholder,
+.p-inputtextarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Dropdown and multiselect options */
+.p-dropdown-panel,
+.p-multiselect-panel {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+}
+
+.p-dropdown-item,
+.p-multiselect-item {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.p-dropdown-item:hover,
+.p-multiselect-item:hover {
+  background-color: #e5e7eb !important;
+  color: #000000 !important;
+}
+
+/* Calendar popup */
+.p-datepicker {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+}
+
+.p-datepicker-header {
+  background-color: #e5e7eb !important;
+}
+
+.p-datepicker-calendar th,
+.p-datepicker-calendar td {
+  color: #000000 !important;
+}
+
+.p-datepicker-calendar td:hover {
+  background-color: #e5e7eb !important;
+  color: #000000 !important;
 }

@@ -1,0 +1,1 @@
+import{a as t,o as a,t as r}from"./index-Dnjy74j8.js";const s={class:"text-gray-800 leading-relaxed"},c={__name:"TextField",props:{value:{type:[String,Number],required:!0}},setup(e){return(o,l)=>(a(),t("div",s,r(e.value),1))}};export{c as default};

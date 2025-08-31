@@ -1,5 +1,5 @@
 <template>
-  <div class="data-card hover:shadow-lg text-gray-900 transition-shadow p-4 border-2 border-black rounded-lg shadow-lg">
+  <div class="bg-white hover:shadow-lg text-gray-900 transition-shadow p-4 border-2 border-black rounded-lg shadow-lg">
     <!-- Action Buttons -->
     <div class="flex justify-end items-start mb-3">
       <div class="flex gap-2">
@@ -23,7 +23,7 @@
         <div v-if="booleanFields.length > 0" class="mb-4 -ml-4">
           <div class="flex flex-wrap gap-2">
             <BooleanField v-for="[key, value] in booleanFields" :key="key" :value="value" :field-name="key"
-              :format-label="formatLabel"/>
+              :format-label="formatLabel" />
           </div>
         </div>
       </div>
