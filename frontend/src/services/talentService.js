@@ -125,32 +125,46 @@ class TalentService {
   }
 
   // Create new talent profile
-  async createTalent(data) {
+  async createTalent(data, schema = null) {
     // Convert form data to Notion properties format
-    const notionProperties = NotionMiddleware.convertToNotionProperties(data)
+    const notionProperties = NotionMiddleware.convertToNotionProperties(data, schema)
 
     const response = await this.apiRequest('/notion-crud', {
       method: 'POST',
       body: JSON.stringify(notionProperties),
     })
 
+    // Transform the response to match the frontend format
+    if (response.success && response.result) {
+      const transformedResponse = NotionMiddleware.transformResultResponse(response)
+      this.clearCacheByPattern('all_talents_')
+      return transformedResponse
+    }
+
     this.clearCacheByPattern('all_talents_')
     return response
   }
 
   // Update talent profile
-  async updateTalent(id, data) {
+  async updateTalent(id, data, schema = null) {
     // Convert form data to Notion properties format
-    const notionProperties = NotionMiddleware.convertToNotionProperties(data)
+    const notionProperties = NotionMiddleware.convertToNotionProperties(data, schema)
 
     const response = await this.apiRequest(`/notion-crud?id=${id}`, {
       method: 'PUT',
       body: JSON.stringify(notionProperties),
     })
 
+    // Transform the response to match the frontend format
+    if (response.success && response.result) {
+      const transformedResponse = NotionMiddleware.transformResultResponse(response)
+      this.clearCacheByPattern('all_talents_')
+      this.cache.delete(`talent_${id}`)
+      return transformedResponse
+    }
+
     this.clearCacheByPattern('all_talents_')
     this.cache.delete(`talent_${id}`)
-
     return response
   }
 

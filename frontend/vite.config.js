@@ -14,6 +14,8 @@ export default defineConfig({
     vueJsx(),
     Components({
       resolvers: [PrimeVueResolver()],
+      dts: true,
+      dirs: ['src/components'],
     }),
     vueDevTools(),
   ],

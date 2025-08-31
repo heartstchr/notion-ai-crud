@@ -85,10 +85,106 @@ function createErrorResponse(message, status = 500) {
 
 // Helper function to create success responses
 function createSuccessResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), {
+  // Mask private fields before sending response
+  const maskedData = maskPrivateFields(data);
+  return new Response(JSON.stringify(maskedData), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+// Helper function to mask private fields marked with (Private)
+function maskPrivateFields(data) {
+  if (!data || typeof data !== "object") {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    return data.map((item) => maskPrivateFields(item));
+  }
+
+  const masked = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (key === "properties" && value && typeof value === "object") {
+      // Handle Notion properties specifically
+      masked[key] = maskNotionProperties(value);
+    } else if (typeof value === "object" && value !== null) {
+      masked[key] = maskPrivateFields(value);
+    } else {
+      masked[key] = value;
+    }
+  }
+  return masked;
+}
+
+// Helper function to mask Notion properties marked as (Private)
+function maskNotionProperties(properties) {
+  const masked = {};
+  for (const [propName, propValue] of Object.entries(properties)) {
+    if (propName.includes("(Private)")) {
+      // Mask private fields based on their type
+      masked[propName] = maskPrivateValue(propValue);
+    } else {
+      masked[propName] = propValue;
+    }
+  }
+  return masked;
+}
+
+// Helper function to mask private values based on type
+function maskPrivateValue(propValue) {
+  if (!propValue || typeof propValue !== "object") {
+    return propValue;
+  }
+
+  // Handle different Notion property types
+  if (propValue.type === "email" && propValue.email) {
+    return {
+      ...propValue,
+      email: "******@****.***",
+    };
+  }
+
+  if (propValue.type === "phone_number" && propValue.phone_number) {
+    return {
+      ...propValue,
+      phone_number: "+**-****-******",
+    };
+  }
+
+  if (propValue.type === "number" && propValue.number !== null) {
+    return {
+      ...propValue,
+      number: "+**-****-******",
+    };
+  }
+
+  if (propValue.type === "rich_text" && propValue.rich_text) {
+    return {
+      ...propValue,
+      rich_text: [{ text: { content: "***" } }],
+    };
+  }
+
+  if (propValue.type === "title" && propValue.title) {
+    return {
+      ...propValue,
+      title: [{ text: { content: "***" } }],
+    };
+  }
+
+  if (propValue.type === "url" && propValue.url) {
+    return {
+      ...propValue,
+      url: "https://***",
+    };
+  }
+
+  // For other types, just mask the content
+  return {
+    ...propValue,
+    content: "***",
+  };
 }
 
 // Helper function to make Notion API calls
