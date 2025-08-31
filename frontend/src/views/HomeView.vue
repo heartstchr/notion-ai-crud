@@ -6,9 +6,9 @@
         @refresh-schema="refreshSchema" />
       <!-- Error State -->
       <ErrorDisplay :error="error" @retry="retryLoad" />
-      <!-- Talent List -->
-      <ListView :loading="loading" :loading-more="loadingMore" :talents="talents" :schema="schema" :has-more="hasMore"
-        @delete-talent="deleteTalent" @load-more="loadMore" />
+      <!-- Item List -->
+      <ListView :loading="loading" :loading-more="loadingMore" :items="items" :schema="schema" :has-more="hasMore"
+        @delete-item="deleteItem" @load-more="loadMore" />
 
     </div>
   </div>
@@ -16,14 +16,14 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useTalentStore } from '../stores/talentStore.js'
+import { useItemStore } from '../stores/itemStore.js'
 // Store
-const talentStore = useTalentStore()
+const itemStore = useItemStore()
 // Computed properties from store
-const loading = computed(() => talentStore.loading)
-const error = computed(() => talentStore.error)
-const talents = computed(() => talentStore.talents)
-const schema = computed(() => talentStore.schema)
+const loading = computed(() => itemStore.loading)
+const error = computed(() => itemStore.error)
+const items = computed(() => itemStore.items)
+const schema = computed(() => itemStore.schema)
 // Local state
 const loadingMore = ref(false)
 const databaseTitle = ref('')
@@ -34,10 +34,10 @@ const hasMore = ref(false)
 const initialize = async () => {
   try {
     // First, ensure schema is loaded (this should happen first)
-    await talentStore.ensureSchemaLoaded()
+    await itemStore.ensureSchemaLoaded()
 
-    // Then fetch talents (schema will be available for proper field ordering)
-    await talentStore.fetchAllTalents()
+    // Then fetch items (schema will be available for proper field ordering)
+    await itemStore.fetchAllItems()
 
     // Update local database info from the store
     updateDatabaseInfo()
@@ -48,7 +48,7 @@ const initialize = async () => {
 
 const updateDatabaseInfo = () => {
   // Get database info from the store without making API calls
-  const dbInfo = talentStore.getDatabaseInfo()
+  const dbInfo = itemStore.getDatabaseInfo()
   if (dbInfo) {
     if (dbInfo.title) {
       databaseTitle.value = dbInfo.title
@@ -61,7 +61,7 @@ const updateDatabaseInfo = () => {
 
 const refreshSchema = async () => {
   try {
-    await talentStore.fetchSchema(true) // Force refresh
+    await itemStore.fetchSchema(true) // Force refresh
     // Update local database info from the refreshed store data
     updateDatabaseInfo()
   } catch (error) {
@@ -88,12 +88,12 @@ const retryLoad = async () => {
   await initialize()
 }
 
-const deleteTalent = async (id) => {
-  if (confirm('Are you sure you want to delete this talent profile?')) {
+const deleteItem = async (id) => {
+  if (confirm('Are you sure you want to delete this item?')) {
     try {
-      await talentStore.deleteTalent(id)
+      await itemStore.deleteItem(id)
     } catch (error) {
-      console.error('Failed to delete talent:', error)
+      console.error('Failed to delete item:', error)
     }
   }
 }

@@ -1,19 +1,18 @@
 <template>
   <div class="space-y-6">
     <!-- Loading State -->
-    <LoadingSkeleton v-if="loading && !talents.length" :count="6"
+    <LoadingSkeleton v-if="loading && !items.length" :count="6"
       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" />
 
-    <!-- Talent List -->
-    <div v-if="!loading || talents.length" class="space-y-6">
+    <!-- Item List -->
+    <div v-if="!loading || items.length" class="space-y-6">
       <!-- Empty State -->
-      <EmptyState v-if="talents.length === 0 && !loading" @add-item="goToAdd" />
+      <EmptyState v-if="items.length === 0 && !loading" @add-item="goToAdd" />
 
-      <!-- Talent Grid -->
+      <!-- Item Grid -->
       <div v-if="schema" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Data Cards -->
-        <CardView v-for="talent in talents" :key="talent.id" :item="talent" :schema="schema"
-          @delete-item="deleteTalent" />
+        <CardView v-for="item in items" :key="item.id" :item="item" :schema="schema" @delete-item="deleteItem" />
 
         <!-- Loading More Skeletons -->
         <LoadingSkeleton v-if="loadingMore" :count="3" class="contents" />
@@ -45,7 +44,7 @@ defineProps({
     type: Boolean,
     default: false
   },
-  talents: {
+  items: {
     type: Array,
     default: () => []
   },
@@ -59,7 +58,7 @@ defineProps({
   }
 })
 
-defineEmits(['deleteTalent', 'loadMore'])
+defineEmits(['deleteItem', 'loadMore'])
 
 const goToAdd = () => {
   router.push('/add')

@@ -1,10 +1,7 @@
 <template>
   <div class="add-view">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Add New Talent</h1>
-      <p class="text-gray-600">Fill out the form below to add a new talent to your pool.</p>
-    </div>
+    <PageHeader mode="add" :database-title="databaseTitle" :show-back-button="false" />
 
     <!-- Loading State -->
     <LoadingSkeleton v-if="loading" :count="1" />
@@ -24,9 +21,9 @@
     </div>
 
     <!-- Form -->
-    <FormFields :editing-talent="null" :schema="schema" :loading="loading" :submitting="submitting"
-      :form-data="formData" :form-errors="formErrors" :form-fields="formFields" @submit-form="submitForm"
-      @refresh-schema="retryLoad" @update:form-data="updateFormData" @cancel-form="goBack" />
+    <FormFields :editing-item="null" :schema="schema" :loading="loading" :submitting="submitting" :form-data="formData"
+      :form-errors="formErrors" :form-fields="formFields" @submit-form="submitForm" @refresh-schema="retryLoad"
+      @update:form-data="updateFormData" @cancel-form="goBack" />
 
     <!-- Toast for notifications -->
     <Toast />
@@ -37,41 +34,49 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { useTalentStore } from '../stores/talentStore.js'
+import { useItemStore } from '../stores/itemStore.js'
 import LoadingSkeleton from '../components/LoadingSkeleton.vue'
+import PageHeader from '../components/PageHeader.vue'
 
 // Composables
 const router = useRouter()
 const toast = useToast()
 
 // Store
-const talentStore = useTalentStore()
+const itemStore = useItemStore()
 
 // Computed properties from store
-const loading = computed(() => talentStore.loading)
-const submitting = computed(() => talentStore.submitting)
-const error = computed(() => talentStore.error)
-const schema = computed(() => talentStore.schema)
+const loading = computed(() => itemStore.loading)
+const submitting = computed(() => itemStore.submitting)
+const error = computed(() => itemStore.error)
+const schema = computed(() => itemStore.schema)
 
 // Local state
 const formData = ref({})
 const formErrors = ref({})
+const databaseTitle = ref('')
 
 // Computed
 const formFields = computed(() => {
   if (!schema.value) return []
-  return talentStore.formFields
+  return itemStore.formFields
 })
 
 // Methods
 const loadSchema = async () => {
   try {
     // Fetch schema from store
-    await talentStore.fetchSchema()
+    await itemStore.fetchSchema()
 
     // Initialize form data with proper default values for each field type
-    formData.value = initializeFormData(talentStore.schema)
+    formData.value = initializeFormData(itemStore.schema)
     formErrors.value = {}
+
+    // Update database title from store
+    const dbInfo = itemStore.getDatabaseInfo()
+    if (dbInfo && dbInfo.title) {
+      databaseTitle.value = dbInfo.title
+    }
   } catch (err) {
     console.error('Failed to load database schema:', err)
   }
@@ -109,19 +114,19 @@ const submitForm = async () => {
     formErrors.value = {}
 
     // Validate form data
-    const validation = talentStore.validateFormData(formData.value, schema.value)
+    const validation = itemStore.validateFormData(formData.value, schema.value)
     if (!validation.isValid) {
       formErrors.value = validation.errors
       return
     }
 
-    // Create new talent
-    await talentStore.createTalent(formData.value)
+    // Create new item
+    await itemStore.createItem(formData.value)
 
     toast.add({
       severity: 'success',
       summary: 'Success',
-      detail: 'Talent added successfully',
+      detail: `${databaseTitle.value} added successfully`,
       life: 3000
     })
 
@@ -131,7 +136,7 @@ const submitForm = async () => {
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: 'Failed to add talent',
+      detail: `Failed to add ${databaseTitle.value.toLowerCase()}`,
       life: 3000
     })
   }

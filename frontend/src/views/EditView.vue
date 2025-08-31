@@ -2,16 +2,7 @@
   <div class="edit-view">
     <div class="max-w-4xl mx-auto p-6">
       <!-- Header -->
-      <div class="mb-8">
-        <div class="flex items-center gap-4 mb-4">
-          <button @click="goBack" class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
-            <i class="pi pi-arrow-left"></i>
-            Back to Pool
-          </button>
-        </div>
-        <h1 class="text-3xl font-bold text-gray-900">Edit {{ databaseTitle }}</h1>
-        <p class="text-gray-600 mt-2">Update the {{ databaseTitle }} information below</p>
-      </div>
+      <PageHeader mode="edit" :database-title="databaseTitle" :show-back-button="true" @go-back="goBack" />
 
       <!-- Loading State -->
       <div v-if="loading">
@@ -33,17 +24,18 @@
       </div>
 
       <!-- Edit Form -->
-      <div v-else-if="talent && schema" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <FormFields :editing-talent="talent" :schema="schema" :loading="loading" :submitting="submitting"
+      <div v-else-if="item && schema" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <FormFields :editing-item="item" :schema="schema" :loading="loading" :submitting="submitting"
           :form-data="formData" :form-errors="formErrors" :form-fields="formFields" @submit-form="submitForm"
           @refresh-schema="retryLoad" @update:form-data="updateFormData" @cancel-form="goBack" />
       </div>
 
       <!-- Not Found State -->
-      <div v-else-if="!talent && !loading" class="text-center py-16">
+      <div v-else-if="!item && !loading" class="text-center py-16">
         <div class="text-6xl mb-4">❌</div>
-        <h3 class="text-2xl font-semibold text-gray-900 mb-2">Talent Not Found</h3>
-        <p class="text-gray-600 mb-6">The {{ databaseTitle }} you're looking for doesn't exist or has been removed.</p>
+        <h3 class="text-2xl font-semibold text-gray-900 mb-2">{{ databaseTitle }} Not Found</h3>
+        <p class="text-gray-600 mb-6">The {{ databaseTitle.toLowerCase() }} you're looking for doesn't exist or has been
+          removed.</p>
         <button @click="goBack" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
           Back to Pool
         </button>
@@ -59,8 +51,9 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { useTalentStore } from '../stores/talentStore.js'
+import { useItemStore } from '../stores/itemStore.js'
 import LoadingSkeleton from '../components/LoadingSkeleton.vue'
+import PageHeader from '../components/PageHeader.vue'
 
 // Composables
 const route = useRoute()
@@ -68,80 +61,80 @@ const router = useRouter()
 const toast = useToast()
 
 // Store
-const talentStore = useTalentStore()
+const itemStore = useItemStore()
 
 // Computed properties from store
-const loading = computed(() => talentStore.loading)
-const error = computed(() => talentStore.error)
-const schema = computed(() => talentStore.schema)
-const submitting = computed(() => talentStore.submitting)
+const loading = computed(() => itemStore.loading)
+const error = computed(() => itemStore.error)
+const schema = computed(() => itemStore.schema)
+const submitting = computed(() => itemStore.submitting)
 
 // Local state
-const talent = ref(null)
+const item = ref(null)
 const formData = ref({})
 const formErrors = ref({})
-const databaseTitle = ref('Talent Profile')
+const databaseTitle = ref('')
 
 // Computed
 const formFields = computed(() => {
   if (!schema.value) return []
-  return talentStore.formFields
+  return itemStore.formFields
 })
 
 // Methods
-const loadTalent = async () => {
+const loadItem = async () => {
   try {
-    const talentId = route.params.id
+    const itemId = route.params.id
 
-    if (!talentId) {
-      console.error('No talent ID provided')
+    if (!itemId) {
+      console.error('No item ID provided')
       return
     }
 
     // Ensure schema is loaded first
-    if (!talentStore.schema) {
-      await talentStore.fetchSchema()
+    if (!itemStore.schema) {
+      await itemStore.fetchSchema()
     }
 
-    // Load talent data from store
-    const talentResult = await talentStore.fetchTalent(talentId)
+    // Load item data from store
+    const itemResult = await itemStore.fetchItem(itemId)
 
-    if (!talentResult) {
-      console.error('Talent not found')
-      talent.value = null // Ensure talent is null so the "not found" UI shows
+    if (!itemResult) {
+      console.error('Item not found')
+      item.value = null // Ensure item is null so the "not found" UI shows
       return
     }
 
-    talent.value = talentResult
+    item.value = itemResult
 
     // Initialize form data with normalized values
-    formData.value = normalizeTalentData(talent.value, talentStore.schema)
+    formData.value = normalizeItemData(item.value, itemStore.schema)
 
     // Update database title from store
-    const dbInfo = talentStore.getDatabaseInfo()
+    const dbInfo = itemStore.getDatabaseInfo()
     if (dbInfo && dbInfo.title) {
       databaseTitle.value = dbInfo.title
     }
   } catch (err) {
-    console.error('Error loading talent:', err)
+    console.error('Error loading item:', err)
     // Error is already set in the store, no need to set it again
   }
 }
 
 const retryLoad = () => {
-  loadTalent()
+  loadItem()
 }
 
-const normalizeTalentData = (talent, schema) => {
+const normalizeItemData = (item, schema) => {
   // Filter out Notion internal properties and only include schema-defined properties
   const normalizedData = {}
 
-  // Normalizing talent data
+  // Normalizing item data
 
   if (schema && schema.properties) {
     Object.keys(schema.properties).forEach(propertyName => {
       const property = schema.properties[propertyName]
-      const value = talent[propertyName]
+      const value = item[propertyName]
 
       if (property.type === 'multiselect') {
         // Handle multiselect fields - ensure they're arrays
@@ -214,7 +207,7 @@ const submitForm = async () => {
     // Schema available
 
     // Validate form data
-    const validation = talentStore.validateFormData(formData.value, schema.value)
+    const validation = itemStore.validateFormData(formData.value, schema.value)
     // Validation result
 
     if (!validation.isValid) {
@@ -223,13 +216,13 @@ const submitForm = async () => {
       return
     }
 
-    // Update talent
-    await talentStore.updateTalent(talent.value.id, formData.value)
+    // Update item
+    await itemStore.updateItem(item.value.id, formData.value)
 
     toast.add({
       severity: 'success',
       summary: 'Success',
-      detail: 'Talent updated successfully',
+      detail: `${databaseTitle.value} updated successfully`,
       life: 3000
     })
 
@@ -240,7 +233,7 @@ const submitForm = async () => {
     console.error('Update failed:', error)
 
     // Show specific error message if available
-    const errorMessage = talentStore.error || error?.message || 'Failed to update talent'
+    const errorMessage = itemStore.error || error?.message || `Failed to update ${databaseTitle.value.toLowerCase()}`
 
     toast.add({
       severity: 'error',
@@ -258,13 +251,13 @@ const goBack = () => {
 // Watch for route parameter changes
 watch(() => route.params.id, (newId) => {
   if (newId) {
-    loadTalent()
+    loadItem()
   }
 })
 
 // Lifecycle
 onMounted(() => {
-  loadTalent()
+  loadItem()
 })
 </script>
 

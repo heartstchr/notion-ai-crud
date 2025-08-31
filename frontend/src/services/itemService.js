@@ -1,11 +1,11 @@
-// Talent Pool Service
-// Service layer for managing talent profiles with dynamic schema support
+// Item Management Service
+// Service layer for managing items with dynamic schema support
 
 import NotionMiddleware from './notionMiddleware.js'
 
 const API_BASE = '/.netlify/functions'
 
-class TalentService {
+class ItemService {
   constructor() {
     this.cache = new Map()
     this.CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
@@ -50,10 +50,10 @@ class TalentService {
     throw new Error('Could not get database information')
   }
 
-  // Get all talent profiles
-  async getAllTalents(options = {}) {
+  // Get all items
+  async getAllItems(options = {}) {
     const { pageSize = 50, startCursor, useCache = true } = options
-    const cacheKey = `all_talents_${pageSize}_${startCursor || 'first'}`
+    const cacheKey = `all_items_${pageSize}_${startCursor || 'first'}`
 
     if (useCache && this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey)
@@ -92,9 +92,9 @@ class TalentService {
     return response
   }
 
-  // Get specific talent profile
-  async getTalent(id) {
-    const cacheKey = `talent_${id}`
+  // Get specific item
+  async getItem(id) {
+    const cacheKey = `item_${id}`
 
     if (this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey)
@@ -124,8 +124,8 @@ class TalentService {
     return response
   }
 
-  // Create new talent profile
-  async createTalent(data, schema = null) {
+  // Create new item
+  async createItem(data, schema = null) {
     // Convert form data to Notion properties format
     const notionProperties = NotionMiddleware.convertToNotionProperties(data, schema)
 
@@ -137,16 +137,16 @@ class TalentService {
     // Transform the response to match the frontend format
     if (response.success && response.result) {
       const transformedResponse = NotionMiddleware.transformResultResponse(response)
-      this.clearCacheByPattern('all_talents_')
+      this.clearCacheByPattern('all_items_')
       return transformedResponse
     }
 
-    this.clearCacheByPattern('all_talents_')
+    this.clearCacheByPattern('all_items_')
     return response
   }
 
-  // Update talent profile
-  async updateTalent(id, data, schema = null) {
+  // Update item
+  async updateItem(id, data, schema = null) {
     // Convert form data to Notion properties format
     const notionProperties = NotionMiddleware.convertToNotionProperties(data, schema)
 
@@ -158,24 +158,24 @@ class TalentService {
     // Transform the response to match the frontend format
     if (response.success && response.result) {
       const transformedResponse = NotionMiddleware.transformResultResponse(response)
-      this.clearCacheByPattern('all_talents_')
-      this.cache.delete(`talent_${id}`)
+      this.clearCacheByPattern('all_items_')
+      this.cache.delete(`item_${id}`)
       return transformedResponse
     }
 
-    this.clearCacheByPattern('all_talents_')
-    this.cache.delete(`talent_${id}`)
+    this.clearCacheByPattern('all_items_')
+    this.cache.delete(`item_${id}`)
     return response
   }
 
-  // Delete talent profile
-  async deleteTalent(id) {
+  // Delete item
+  async deleteItem(id) {
     const response = await this.apiRequest(`/notion-crud?id=${id}`, {
       method: 'DELETE',
     })
 
-    this.clearCacheByPattern('all_talents_')
-    this.cache.delete(`talent_${id}`)
+    this.clearCacheByPattern('all_items_')
+    this.cache.delete(`item_${id}`)
 
     return response
   }
@@ -211,4 +211,4 @@ class TalentService {
 }
 
 // Export singleton instance
-export default new TalentService()
+export default new ItemService()

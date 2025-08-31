@@ -27,6 +27,7 @@ declare module 'vue' {
     LoadMoreButton: typeof import('./src/components/LoadMoreButton.vue')['default']
     MultiSelect: typeof import('primevue/multiselect')['default']
     NumbersField: typeof import('./src/components/field-renderers/NumbersField.vue')['default']
+    PageHeader: typeof import('./src/components/PageHeader.vue')['default']
     RichTextField: typeof import('./src/components/field-renderers/RichTextField.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

@@ -15,7 +15,7 @@
 
     <!-- No Schema Available -->
     <div v-else-if="formFields.length === 0" class="text-center py-8 text-gray-500">
-      <p>No database schema available. Please check your Notion database configuration.</p>
+      <p>No database schema available. Please check your database configuration.</p>
     </div>
 
     <!-- Form Fields -->
@@ -146,7 +146,7 @@ import {
 } from '../utils/mappingUtils.js'
 
 const props = defineProps({
-  editingTalent: {
+  editingItem: {
     type: Object,
     default: null
   },
@@ -179,11 +179,11 @@ const props = defineProps({
 const emit = defineEmits(['submitForm', 'refreshSchema', 'update:formData', 'cancelForm'])
 
 const submitButtonText = computed(() => {
-  return props.editingTalent ? 'Update Talent' : 'Add Talent'
+  return props.editingItem ? 'Update Item' : 'Add Item'
 })
 
 const submittingText = computed(() => {
-  return props.editingTalent ? 'Updating...' : 'Adding...'
+  return props.editingItem ? 'Updating...' : 'Adding...'
 })
 
 

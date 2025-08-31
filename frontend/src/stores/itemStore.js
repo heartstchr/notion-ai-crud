@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import talentService from '../services/talentService.js'
+import itemService from '../services/itemService.js'
 
-export const useTalentStore = defineStore('talent', () => {
+export const useItemStore = defineStore('item', () => {
   // State
-  const talents = ref([])
-  const currentTalent = ref(null)
+  const items = ref([])
+  const currentItem = ref(null)
   const schema = ref(null)
   const databaseInfo = ref(null)
   const loading = ref(false)
@@ -13,11 +13,11 @@ export const useTalentStore = defineStore('talent', () => {
   const error = ref(null)
 
   // Getters
-  const getTalentById = computed(() => {
-    return (id) => talents.value.find((talent) => talent.id === id)
+  const getItemById = computed(() => {
+    return (id) => items.value.find((item) => item.id === id)
   })
 
-  const talentsCount = computed(() => talents.value.length)
+  const itemsCount = computed(() => items.value.length)
 
   const hasSchema = computed(() => schema.value !== null)
 
@@ -27,45 +27,45 @@ export const useTalentStore = defineStore('talent', () => {
 
   const formFields = computed(() => {
     if (!schema.value) return []
-    return talentService.generateFormFields(schema.value)
+    return itemService.generateFormFields(schema.value)
   })
 
   // Actions
-  const fetchAllTalents = async () => {
+  const fetchAllItems = async () => {
     try {
       loading.value = true
       error.value = null
 
-      const response = await talentService.getAllTalents()
+      const response = await itemService.getAllItems()
       if (response.success && response.results) {
-        talents.value = response.results
+        items.value = response.results
       } else {
-        throw new Error(response.message || 'Failed to fetch talents')
+        throw new Error(response.message || 'Failed to fetch items')
       }
     } catch (err) {
-      error.value = err.message || 'Failed to fetch talents'
-      console.error('Error fetching talents:', err)
+      error.value = err.message || 'Failed to fetch items'
+      console.error('Error fetching items:', err)
       throw err
     } finally {
       loading.value = false
     }
   }
 
-  const fetchTalent = async (id) => {
+  const fetchItem = async (id) => {
     try {
       loading.value = true
       error.value = null
 
-      const response = await talentService.getTalent(id)
+      const response = await itemService.getItem(id)
       if (response.success && response.result) {
-        currentTalent.value = response.result
+        currentItem.value = response.result
         return response.result
       } else {
-        throw new Error(response.message || 'Failed to fetch talent')
+        throw new Error(response.message || 'Failed to fetch item')
       }
     } catch (err) {
-      error.value = err.message || 'Failed to fetch talent'
-      console.error('Error fetching talent:', err)
+      error.value = err.message || 'Failed to fetch item'
+      console.error('Error fetching item:', err)
       throw err
     } finally {
       loading.value = false
@@ -84,7 +84,7 @@ export const useTalentStore = defineStore('talent', () => {
       error.value = null
 
       // Fetching schema from API
-      const response = await talentService.getDatabaseInfo()
+      const response = await itemService.getDatabaseInfo()
       if (response.schema) {
         schema.value = response.schema
         databaseInfo.value = response // Store the full database info
@@ -131,90 +131,90 @@ export const useTalentStore = defineStore('talent', () => {
   }
 
   const validateFormData = (data, schema) => {
-    return talentService.validateFormData(data, schema)
+    return itemService.validateFormData(data, schema)
   }
 
-  const createTalent = async (talentData) => {
+  const createItem = async (itemData) => {
     try {
       submitting.value = true
       error.value = null
 
-      const response = await talentService.createTalent(talentData, schema.value)
+      const response = await itemService.createItem(itemData, schema.value)
       if (response.success && response.result) {
-        // Add the new talent to the list
-        talents.value.unshift(response.result)
+        // Add the new item to the list
+        items.value.unshift(response.result)
         return response.result
       } else {
-        throw new Error(response.message || 'Failed to create talent')
+        throw new Error(response.message || 'Failed to create item')
       }
     } catch (err) {
-      error.value = err.message || 'Failed to create talent'
-      console.error('Error creating talent:', err)
+      error.value = err.message || 'Failed to create item'
+      console.error('Error creating item:', err)
       throw err
     } finally {
       submitting.value = false
     }
   }
 
-  const updateTalent = async (id, talentData) => {
+  const updateItem = async (id, itemData) => {
     try {
       submitting.value = true
       error.value = null
 
-      // Updating talent
+      // Updating item
 
-      const response = await talentService.updateTalent(id, talentData, schema.value)
+      const response = await itemService.updateItem(id, itemData, schema.value)
       // Update response
 
       if (response.success && response.result) {
-        // The response.result should now be the transformed talent data
-        const updatedTalent = response.result
+        // The response.result should now be the transformed item data
+        const updatedItem = response.result
 
-        // Update the talent in the list
-        const index = talents.value.findIndex((talent) => talent.id === id)
+        // Update the item in the list
+        const index = items.value.findIndex((item) => item.id === id)
         if (index !== -1) {
-          talents.value[index] = updatedTalent
+          items.value[index] = updatedItem
         }
 
-        // Update current talent if it's the one being edited
-        if (currentTalent.value && currentTalent.value.id === id) {
-          currentTalent.value = updatedTalent
+        // Update current item if it's the one being edited
+        if (currentItem.value && currentItem.value.id === id) {
+          currentItem.value = updatedItem
         }
 
-        return updatedTalent
+        return updatedItem
       } else {
-        throw new Error(response.message || 'Failed to update talent')
+        throw new Error(response.message || 'Failed to update item')
       }
     } catch (err) {
-      error.value = err.message || 'Failed to update talent'
-      console.error('Error updating talent:', err)
+      error.value = err.message || 'Failed to update item'
+      console.error('Error updating item:', err)
       throw err
     } finally {
       submitting.value = false
     }
   }
 
-  const deleteTalent = async (id) => {
+  const deleteItem = async (id) => {
     try {
       error.value = null
 
-      const response = await talentService.deleteTalent(id)
+      const response = await itemService.deleteItem(id)
       if (response.success) {
-        // Remove the talent from the list
-        talents.value = talents.value.filter((talent) => talent.id !== id)
+        // Remove the item from the list
+        items.value = items.value.filter((item) => item.id !== id)
 
-        // Clear current talent if it's the one being deleted
-        if (currentTalent.value && currentTalent.value.id === id) {
-          currentTalent.value = null
+        // Clear current item if it's the one being deleted
+        if (currentItem.value && currentItem.value.id === id) {
+          currentItem.value = null
         }
 
         return response
       } else {
-        throw new Error(response.message || 'Failed to delete talent')
+        throw new Error(response.message || 'Failed to delete item')
       }
     } catch (err) {
-      error.value = err.message || 'Failed to delete talent'
-      console.error('Error deleting talent:', err)
+      error.value = err.message || 'Failed to delete item'
+      console.error('Error deleting item:', err)
       throw err
     }
   }
@@ -223,13 +223,13 @@ export const useTalentStore = defineStore('talent', () => {
     error.value = null
   }
 
-  const clearCurrentTalent = () => {
-    currentTalent.value = null
+  const clearCurrentItem = () => {
+    currentItem.value = null
   }
 
   const reset = () => {
-    talents.value = []
-    currentTalent.value = null
+    items.value = []
+    currentItem.value = null
     schema.value = null
     databaseInfo.value = null
     loading.value = false
@@ -239,8 +239,8 @@ export const useTalentStore = defineStore('talent', () => {
 
   return {
     // State
-    talents,
-    currentTalent,
+    items,
+    currentItem,
     schema,
     databaseInfo,
     loading,
@@ -248,25 +248,25 @@ export const useTalentStore = defineStore('talent', () => {
     error,
 
     // Getters
-    getTalentById,
-    talentsCount,
+    getItemById,
+    itemsCount,
     hasSchema,
     hasDatabaseInfo,
     isFullyLoaded,
     formFields,
 
     // Actions
-    fetchAllTalents,
-    fetchTalent,
+    fetchAllItems,
+    fetchItem,
     fetchSchema,
     getDatabaseInfo,
     ensureSchemaLoaded,
     validateFormData,
-    createTalent,
-    updateTalent,
-    deleteTalent,
+    createItem,
+    updateItem,
+    deleteItem,
     clearError,
-    clearCurrentTalent,
+    clearCurrentItem,
     reset,
   }
 })
