@@ -1,15 +1,10 @@
 <template>
   <div class="edit-view">
     <div class="max-w-4xl mx-auto p-6">
-      <!-- Header -->
       <PageHeader mode="edit" :database-title="databaseTitle" :show-back-button="true" @go-back="goBack" />
-
-      <!-- Loading State -->
       <div v-if="loading || (!item && !error)">
-        <LoadingSkeleton :count="3" container-class="bg-white rounded-lg shadow-sm border border-gray-200 p-6" />
+        <LoadingSkeleton :count="1" container-class="bg-white rounded-lg shadow-sm border border-gray-200 p-6" />
       </div>
-
-      <!-- Error State -->
       <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-6">
         <div class="flex items-start gap-3">
           <i class="pi pi-exclamation-triangle text-red-500 text-xl mt-1"></i>
@@ -22,15 +17,11 @@
           </div>
         </div>
       </div>
-
-      <!-- Edit Form -->
       <div v-else-if="isFormReady" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <FormFields :editing-item="item" :submitting="submitting" :form-errors="formErrors" @submit-form="submitForm"
           @refresh-schema="retryLoad" @update:form-data="updateFormData" @cancel-form="goBack" />
       </div>
     </div>
-
-    <!-- Toast for notifications -->
     <Toast />
   </div>
 </template>
@@ -188,7 +179,8 @@ const submitForm = async () => {
     }
 
     // Update item
-    await itemStore.updateItem(item.value.id, formDataToSubmit, item.value)
+    const itemId = route.params.id
+    await itemStore.updateItem(itemId, formDataToSubmit, rawSchema.value)
 
     // Show success message
     toast.add({

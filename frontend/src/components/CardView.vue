@@ -8,8 +8,7 @@
           class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit">
           <i class="pi pi-pencil"></i>
         </button>
-        <button @click="deleteItem"
-          class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+        <button @click="deleteItem" class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
           <i class="pi pi-trash"></i>
         </button>
       </div>
@@ -36,41 +35,72 @@
 
     <!-- Contact fields section -->
     <div v-if="contactFields.length > 0" class="mb-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
         <div v-for="[key, value] in contactFields" :key="key"
-          class="flex items-center justify-between bg-blue-50 rounded-lg p-3">
-          <div class="flex items-center space-x-2">
+          class="flex items-center justify-start bg-blue-50 rounded-lg p-1 gap-1">
+          <div class="flex items-center space-x-1">
             <i :class="getContactFieldIcon(key, getSchemaProperty(key))"></i>
           </div>
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-800 font-medium text-base">
+          <div class="flex items-center space-x-1">
+            <span class="text-gray-800 font-medium text-sm truncate max-w-32" :title="value || 'Not provided'">
               {{ value || 'Not provided' }}
             </span>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Boolean fields section -->
-
-
-    <!-- Number fields section -->
-    <div v-if="numberFields.length > 0" class="mb-4">
+    <!-- Currency Number Fields ({{ currencyNumberFields.length }}) -->
+    <div v-if="currencyNumberFields.length > 0" class="mb-4">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div v-for="[key, value] in numberFields" :key="key"
-          class="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-          <div class="flex items-center space-x-2">
-            <i :class="getNumberFieldIcon(key, getSchemaProperty(key))" class="text-blue-500"></i>
-            <span class="text-sm font-medium text-gray-700">{{ formatLabel(key) }}</span>
+        <div v-for="[key, value] in currencyNumberFields" :key="key"
+          class="flex flex-col items-center justify-between bg-green-50 rounded-lg p-1 border border-green-200">
+          <div class="flex items-center space-x-1">
+            <span class="text-sm font-medium text-gray-700 truncate max-w-24" :title="formatLabel(key)">{{
+              formatLabel(key) }}</span>
           </div>
-          <div class="flex items-center space-x-2">
+          <div class="flex items-center space-x-1">
             <span class="text-gray-800 font-mono font-medium">
               {{ formatNumber(value || 0, key) }}
             </span>
-            <!-- Show currency symbol if available -->
-            <span v-if="getFieldCurrencySymbol(key)" class="text-lg text-gray-600 font-medium">
-              {{ getFieldCurrencySymbol(key) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regular Number Fields ({{ regularNumberFields.length }}) -->
+    <div v-if="regularNumberFields.length > 0" class="mb-4">
+      <div class="gap-3">
+        <div v-for="[key, value] in regularNumberFields" :key="key"
+          class="flex-col items-center justify-between bg-gray-50 rounded-lg p-3">
+          <div class="flex items-center space-x-2 mb-2">
+            <i :class="getNumberFieldIcon(key, getSchemaProperty(key))" class="text-blue-500"></i>
+            <span class="text-sm font-medium text-gray-700" :title="formatLabel(key)">{{
+              formatLabel(key) }}</span>
+          </div>
+          <div class="flex items-center justify-end">
+            <span class="text-gray-800 font-mono font-medium text-lg">
+              {{ formatNumber(value || 0, key) }}
             </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- URL Fields -->
+    <div v-if="urlFields.length > 0" class="mb-4">
+      <div class="gap-3">
+        <div v-for="[key, value] in urlFields" :key="key"
+          class="flex-col items-center justify-between bg-purple-50 rounded-lg p-3 border border-purple-200">
+          <div class="flex items-center space-x-2">
+            <i class="pi pi-link text-purple-600"></i>
+            <span class="text-sm font-medium text-gray-700" :title="formatLabel(key)">{{
+              formatLabel(key) }}</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <a :href="value" target="_blank" rel="noopener noreferrer"
+              class="text-purple-600 hover:text-purple-800 underline" :title="value">
+              {{ value || 'No URL' }}
+            </a>
           </div>
         </div>
       </div>
@@ -84,7 +114,7 @@
         <div v-if="shouldShowLabel(key)" class="text-sm font-medium text-gray-700 mb-2">
           <span v-if="property?.emoji" class="mr-2 text-base">{{ property.emoji }}</span>
           <i v-else-if="property?.icon" :class="property.icon" class="mr-2 text-gray-500"></i>
-          {{ formatLabel(key) }}
+          <span class="truncate max-w-32" :title="formatLabel(key)">{{ formatLabel(key) }}</span>
         </div>
 
         <!-- Field content -->
@@ -184,12 +214,41 @@ const booleanFields = computed(() => {
     .map(([key]) => [key, props.item[key] || false])
 })
 
-const numberFields = computed(() => {
+const currencyNumberFields = computed(() => {
+  if (!props.schema?.properties) return []
+
+  const fields = Object.entries(props.schema.properties)
+    .filter(([, property]) =>
+      property.type === 'number' &&
+      property.number?.format &&
+      property.number?.format !== 'number'
+    )
+    .map(([key]) => [key, props.item[key] || 0])
+
+  console.log('Currency Number Fields:', fields.length, fields)
+  return fields
+})
+
+const regularNumberFields = computed(() => {
+  if (!props.schema?.properties) return []
+
+  const fields = Object.entries(props.schema.properties)
+    .filter(([, property]) =>
+      property.type === 'number' &&
+      (!property.number?.format || property.number?.format === 'number')
+    )
+    .map(([key]) => [key, props.item[key] || 0])
+
+  console.log('Regular Number Fields:', fields.length, fields)
+  return fields
+})
+
+const urlFields = computed(() => {
   if (!props.schema?.properties) return []
 
   return Object.entries(props.schema.properties)
-    .filter(([, property]) => property.type === 'number')
-    .map(([key]) => [key, props.item[key] || 0])
+    .filter(([, property]) => property.type === 'url')
+    .map(([key]) => [key, props.item[key]])
 })
 
 const processedFields = computed(() => {
@@ -209,6 +268,7 @@ const processedFields = computed(() => {
         property.type !== 'title' &&
         property.type !== 'number' &&
         property.type !== 'checkbox' &&
+        property.type !== 'url' &&
         !isContactField
     })
     .map(([key]) => [key, props.schema.properties[key]])

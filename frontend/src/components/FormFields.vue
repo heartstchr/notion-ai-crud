@@ -72,15 +72,15 @@
               <span v-if="field.emoji" class="mr-2 text-lg">{{ field.emoji }}</span>
               <i v-else-if="field.icon" :class="field.icon" class="mr-2 text-gray-500"></i>
               {{ field.label }}
-              <span class="text-green-600 ml-1">({{ getCurrencyCode(field.format) }})</span>
+              <span class="text-green-600 ml-1">({{ currencyFormats[field.format]?.currency || 'USD' }})</span>
               <span v-if="field.required" class="text-red-500 ml-1">*</span>
             </label>
             <div class="relative">
               <InputNumber :id="field.name" :placeholder="field.placeholder" :required="field.required"
-                :min="field.min || 0" :max="field.max || 99" :step="field.step" :model-value="getFieldValue(field.name)"
+                :min="field.min || 0" :max="field.max" :step="field.step" :model-value="getFieldValue(field.name)"
                 @update:model-value="(value) => updateField(field.name, value)"
                 :class="{ 'p-invalid': formErrors[field.name] }" class="w-full" showButtons buttonLayout="horizontal"
-                mode="currency" :currency="getCurrencyCode(field.format)">
+                mode="currency" :currency="currencyFormats[field.format]?.currency || 'USD'">
                 <template #incrementbuttonicon>
                   <span class="pi pi-plus" />
                 </template>
@@ -98,7 +98,7 @@
 
       <!-- Regular Number Fields Section -->
       <div v-if="regularNumberFields.length > 0" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-4">
           <div v-for="field in regularNumberFields" :key="field.name" class="space-y-2">
             <label :for="field.name" class="block text-sm font-medium text-gray-700">
               <span v-if="field.emoji" class="mr-2 text-lg">{{ field.emoji }}</span>
@@ -108,7 +108,7 @@
             </label>
             <div class="relative">
               <InputNumber :id="field.name" :placeholder="field.placeholder" :required="field.required"
-                :min="field.min || 0" :max="field.max || 99" :step="field.step" :model-value="getFieldValue(field.name)"
+                :min="field.min || 0" :max="field.max" :step="field.step" :model-value="getFieldValue(field.name)"
                 @update:model-value="(value) => updateField(field.name, value)"
                 :class="{ 'p-invalid': formErrors[field.name] }" class="w-full" showButtons buttonLayout="horizontal">
                 <template #incrementbuttonicon>
@@ -165,11 +165,10 @@
             </template>
 
             <!-- Multi Select -->
-            <template v-else-if="field.type === 'multiselect'">
+            <template v-else-if="field.type === 'multi_select'">
               <MultiSelect :id="field.name" :model-value="getMultiselectValue(field.name)"
-                @update:model-value="(value) => updateMultiselectField(field.name, value)"
-                :options="getMultiselectOptions(field, getMultiselectValue(field.name))" optionLabel="label"
-                optionValue="value" :placeholder="`Select ${field.label}`"
+                @update:model-value="(value) => updateMultiselectField(field.name, value)" :options="field.options"
+                optionLabel="label" optionValue="value" :placeholder="`Select ${field.label}`"
                 :class="{ 'p-invalid': formErrors[field.name] }" class="w-full" :filter="true" :allowEmpty="true"
                 display="chip">
                 <template #option="slotProps">
@@ -252,11 +251,11 @@ import {
   getOptionClasses,
   getSelectedOptionClasses,
   getSelectedOptionLabel,
-  getMultiselectOptions,
   getDefaultIcon,
   formatLabel,
   generatePlaceholder,
-  extractOptionsFromRawProperty
+  extractOptionsFromRawProperty,
+  currencyFormats
 } from '../utils/mappingUtils.js'
 
 // Get field value directly from editingItem
@@ -264,20 +263,7 @@ const getFieldValue = (fieldName) => {
   return props.editingItem?.[fieldName]?.value || ''
 }
 
-// Get currency code for PrimeVue InputNumber
-const getCurrencyCode = (format) => {
-  const currencyCodeMap = {
-    'dollar': 'USD',
-    'euro': 'EUR',
-    'pound': 'GBP',
-    'yen': 'JPY',
-    'rupee': 'INR',
-    'yuan': 'CNY',
-    'franc': 'CHF',
-    'mark': 'DEM'
-  }
-  return currencyCodeMap[format] || 'USD'
-}
+
 
 const props = defineProps({
   editingItem: {
@@ -312,33 +298,43 @@ const getFormFieldsArray = computed(() => {
     return []
   }
 
-  return Object.entries(props.editingItem).map(([key, property]) => ({
-    name: key,
-    type: property.type,
-    required: property.required || false,
-    value: property.value || '',
-    options: property.type === 'select' || property.type === 'multi_select'
-      ? extractOptionsFromRawProperty(property)
-      : [],
-    icon: getDefaultIcon(key, property.type, property.number?.format),
-    emoji: property.emoji || null,
-    label: formatLabel(key),
-    placeholder: generatePlaceholder(key, property.type, property.number?.format),
-    format: property.number?.format,
-    min: property.type === 'number' ? (property.number?.format === 'dollar' ? 0 : undefined) : undefined,
-    step: property.type === 'number' ? (property.number?.format === 'dollar' ? 0.01 : 1) : undefined,
-    id: property.id,
-    // Preserve nested objects without overriding format
-    number: property.number,
-    select: property.select,
-    multi_select: property.multi_select,
-    // Spread other properties but exclude nested ones to avoid conflicts
-    ...Object.fromEntries(
-      Object.entries(property).filter(([k]) =>
-        !['number', 'select', 'multi_select'].includes(k)
+  return Object.entries(props.editingItem).map(([key, property]) => {
+    // Determine the actual field type from the property structure
+    let fieldType = property.type
+
+    // If it's a multi_select field, ensure the type is correctly set
+    if (property.multi_select && Array.isArray(property.multi_select)) {
+      fieldType = 'multi_select'
+    }
+
+    return {
+      name: key,
+      type: fieldType,
+      required: property.required || false,
+      value: property.value || '',
+      options: fieldType === 'select' || fieldType === 'multi_select'
+        ? extractOptionsFromRawProperty(property)
+        : [],
+      icon: getDefaultIcon(key, fieldType, property.number?.format),
+      emoji: property.emoji || null,
+      label: formatLabel(key),
+      placeholder: generatePlaceholder(key, fieldType, property.number?.format),
+      format: property.number?.format,
+      min: fieldType === 'number' ? 0 : undefined,
+      step: fieldType === 'number' ? (property.number?.format && property.number?.format !== 'number' ? 500 : 1) : undefined,
+      id: property.id,
+      // Preserve nested objects without overriding format
+      number: property.number,
+      select: property.select,
+      multi_select: property.multi_select,
+      // Spread other properties but exclude nested ones to avoid conflicts
+      ...Object.fromEntries(
+        Object.entries(property).filter(([k]) =>
+          !['number', 'select', 'multi_select'].includes(k)
+        )
       )
-    )
-  }))
+    }
+  })
 })
 
 const titleFields = computed(() => {
@@ -376,7 +372,7 @@ const booleanFields = computed(() => {
 
 const selectionFields = computed(() => {
   return getFormFieldsArray.value.filter(field =>
-    field.type === 'select' || field.type === 'multiselect'
+    field.type === 'select' || field.type === 'multi_select'
   )
 })
 
@@ -393,7 +389,7 @@ const otherFields = computed(() => {
       field.type !== 'number' &&
       field.type !== 'checkbox' &&
       field.type !== 'select' &&
-      field.type !== 'multiselect' &&
+      field.type !== 'multi_select' &&
       !isContactField
   })
 })
@@ -409,7 +405,8 @@ const getMultiselectValue = (fieldName) => {
   if (Array.isArray(value)) {
     return value
   }
-  // If it's a string, try to parse it
+
+  // If it's a string, try to parse it (fallback for legacy data)
   if (typeof value === 'string' && value) {
     try {
       const parsed = JSON.parse(value)
@@ -419,16 +416,15 @@ const getMultiselectValue = (fieldName) => {
       return split
     }
   }
+
+  // If no value, return empty array
   return []
 }
 
 const updateMultiselectField = (fieldName, value) => {
-  // Convert to raw Notion format
-  const updatedValue = {
-    type: 'multi_select',
-    multi_select: Array.isArray(value) ? value.map(v => ({ name: v })) : []
-  }
-  emit('update:formData', { [fieldName]: updatedValue })
+  // For multi-select, we want to store the actual selected values
+  // The Notion format conversion will happen when submitting the form
+  emit('update:formData', { [fieldName]: value })
 }
 
 const removeMultiselectItem = (fieldName, itemToRemove) => {

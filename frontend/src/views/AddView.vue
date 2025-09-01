@@ -21,9 +21,10 @@
     </div>
 
     <!-- Form -->
-    <FormFields :editing-item="null" :schema="schema" :loading="loading" :submitting="submitting" :form-data="formData"
-      :form-errors="formErrors" :form-fields="schema?.properties || {}" @submit-form="submitForm"
-      @refresh-schema="retryLoad" @update:form-data="updateFormData" @cancel-form="goBack" />
+    <div v-if="isFormReady" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <FormFields :editing-item="item" :submitting="submitting" :form-errors="formErrors" @submit-form="submitForm"
+        @refresh-schema="retryLoad" @update:form-data="updateFormData" @cancel-form="goBack" />
+    </div>
 
     <!-- Toast for notifications -->
     <Toast />
@@ -31,7 +32,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useItemStore } from '../stores/itemStore.js'
@@ -49,12 +50,21 @@ const itemStore = useItemStore()
 const loading = computed(() => itemStore.loading)
 const submitting = computed(() => itemStore.submitting)
 const error = computed(() => itemStore.error)
-const schema = computed(() => itemStore.schema)
 
 // Local state
-const formData = ref({})
+const item = ref(null)
 const formErrors = ref({})
 const databaseTitle = ref('')
+const rawSchema = ref(null)
+
+// Computed properties
+const isFormReady = computed(() => item.value && rawSchema.value && !loading.value && !error.value)
+
+// Validation regex patterns (memoized)
+const VALIDATION_PATTERNS = {
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  phone: /^[+]?[1-9][\d]{0,15}$/
+}
 
 // Methods
 const loadSchema = async () => {
@@ -62,15 +72,52 @@ const loadSchema = async () => {
     // Fetch schema from store
     await itemStore.fetchSchema()
 
-    // Initialize form data with proper default values for each field type
-    formData.value = initializeFormData(itemStore.schema)
+    // Get database info (synchronous, no await needed)
+    const dbInfo = itemStore.getDatabaseInfo()
+
+    // Use database info if available, otherwise fall back to schema from store
+    const schemaToUse = dbInfo?.schema || itemStore.schema
+    const titleToUse = dbInfo?.title || itemStore.schema?.title || 'Item'
+
+    if (!schemaToUse) {
+      toast.add({
+        severity: 'error',
+        summary: 'Schema Error',
+        detail: 'Failed to load database schema. Please try again.',
+        life: 3000
+      })
+      return
+    }
+
+    // Set raw schema and database title
+    rawSchema.value = schemaToUse
+    databaseTitle.value = titleToUse
+
+    // Create enriched properties with empty values for new item
+    const enrichedProperties = schemaToUse?.properties
+      ? Object.fromEntries(
+        Object.entries(schemaToUse.properties).map(([fieldName, property]) => {
+          const enrichedProperty = {
+            ...property,
+            value: '', // Empty values for new item
+            name: property.name || fieldName,
+            // Ensure nested objects are preserved
+            number: property.number || null,
+            select: property.select || null,
+            multi_select: property.multi_select || null,
+            // Ensure format is explicitly set for number fields
+            format: property.type === 'number' ? (property.number?.format || property.format) : undefined
+          }
+
+          return [fieldName, enrichedProperty]
+        })
+      )
+      : {}
+
+    // Set enriched properties as item
+    item.value = enrichedProperties
     formErrors.value = {}
 
-    // Update database title from store
-    const dbInfo = itemStore.getDatabaseInfo()
-    if (dbInfo && dbInfo.title) {
-      databaseTitle.value = dbInfo.title
-    }
   } catch (err) {
     console.error('Failed to load database schema:', err)
   }
@@ -80,43 +127,39 @@ const retryLoad = async () => {
   await loadSchema()
 }
 
-const initializeFormData = (schema) => {
-  const initialData = {}
-  if (schema && schema.properties) {
-    Object.keys(schema.properties).forEach(propertyName => {
-      const property = schema.properties[propertyName]
-      if (property.type === 'multiselect' || property.type === 'select') {
-        initialData[propertyName] = []
-      } else if (property.type === 'checkbox') {
-        initialData[propertyName] = false
-      } else {
-        initialData[propertyName] = ''
-      }
-    })
-  }
-  return initialData
-}
-
 const updateFormData = (newFormData) => {
-  formData.value = newFormData
-  // Clear errors when form data changes
+  // Update the values in enriched properties
+  Object.entries(newFormData).forEach(([key, value]) => {
+    if (item.value[key]) {
+      item.value[key].value = value
+    }
+  })
+  // Clear errors when user starts typing
   formErrors.value = {}
 }
 
 const submitForm = async () => {
+  if (submitting.value) return // Prevent double submission
+
   try {
     formErrors.value = {}
 
+    // Extract form data from enriched properties
+    const formDataToSubmit = Object.fromEntries(
+      Object.entries(item.value).map(([key, property]) => [key, property.value])
+    )
+
     // Validate form data
-    const validation = itemStore.validateFormData(formData.value, schema.value)
+    const validation = validateFormData(formDataToSubmit, item.value)
     if (!validation.isValid) {
       formErrors.value = validation.errors
       return
     }
 
     // Create new item
-    await itemStore.createItem(formData.value)
+    await itemStore.createItem(formDataToSubmit)
 
+    // Show success message
     toast.add({
       severity: 'success',
       summary: 'Success',
@@ -124,15 +167,84 @@ const submitForm = async () => {
       life: 3000
     })
 
+    // Navigate back after a brief delay for better UX
+    await nextTick()
     router.push('/')
-  } catch {
+
+  } catch (error) {
+    console.error('Create failed:', error)
+
+    const errorMessage = itemStore.error ||
+      error?.message ||
+      `Failed to add ${databaseTitle.value.toLowerCase()}`
+
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: `Failed to add ${databaseTitle.value.toLowerCase()}`,
-      life: 3000
+      detail: errorMessage,
+      life: 5000
     })
   }
+}
+
+const validateFormData = (data, enrichedProperties) => {
+  const errors = {}
+
+  if (!enrichedProperties) {
+    return { isValid: true, errors: {} }
+  }
+
+  Object.entries(enrichedProperties).forEach(([key, property]) => {
+    const value = data[key]
+    const trimmedValue = value?.toString().trim()
+
+    // Check required fields
+    if (property.required && (!value || trimmedValue === '')) {
+      errors[key] = `${formatLabel(key)} is required`
+      return
+    }
+
+    // Type-specific validation (only if value exists)
+    if (value && trimmedValue !== '') {
+      switch (property.type) {
+        case 'email': {
+          if (!VALIDATION_PATTERNS.email.test(value)) {
+            errors[key] = 'Please enter a valid email address'
+          }
+          break
+        }
+        case 'url': {
+          try {
+            new URL(value)
+          } catch {
+            if (!value.startsWith('http://') && !value.startsWith('https://')) {
+              errors[key] = 'Please enter a valid URL (include http:// or https://)'
+            }
+          }
+          break
+        }
+        case 'phone_number': {
+          const cleanPhone = value.replace(/[\s\-()]/g, '')
+          if (!VALIDATION_PATTERNS.phone.test(cleanPhone)) {
+            errors[key] = 'Please enter a valid phone number'
+          }
+          break
+        }
+      }
+    }
+  })
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  }
+}
+
+const formatLabel = (fieldName) => {
+  return fieldName
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim()
 }
 
 const goBack = () => {

@@ -7,8 +7,8 @@
       <!-- Error State -->
       <ErrorDisplay :error="error" @retry="retryLoad" />
       <!-- Item List -->
-      <ListView :loading="loading" :loading-more="loadingMore" :items="items" :schema="schema" :has-more="hasMore"
-        @delete-item="deleteItem" @load-more="loadMore" />
+      <ListView :loading="loading" :loading-more="loadingMore" :items="items" :schema="enrichedSchema"
+        :has-more="hasMore" @delete-item="deleteItem" @load-more="loadMore" />
 
     </div>
   </div>
@@ -23,7 +23,43 @@ const itemStore = useItemStore()
 const loading = computed(() => itemStore.loading)
 const error = computed(() => itemStore.error)
 const items = computed(() => itemStore.items)
-const schema = computed(() => itemStore.schema)
+// Create enriched schema with properties that include field metadata
+const enrichedSchema = computed(() => {
+  if (!itemStore.schema?.properties) return null
+
+  // Get database info for additional formatting data
+  const dbInfo = itemStore.getDatabaseInfo()
+  const dbSchema = dbInfo?.schema?.properties || {}
+
+  return {
+    ...itemStore.schema,
+    properties: Object.fromEntries(
+      Object.entries(itemStore.schema.properties).map(([key, property]) => [
+        key,
+        {
+          ...property,
+          // Ensure the property has all the metadata CardView needs
+          type: property.type,
+          required: property.required || false,
+          emoji: property.emoji || null,
+          icon: property.icon || null,
+          // Preserve nested objects for proper field detection
+          number: property.number || null,
+          select: property.select || null,
+          multi_select: property.multi_select || null,
+          // Merge with database info format data if available
+          ...(dbSchema[key] && {
+            number: {
+              ...property.number,
+              format: dbSchema[key].number?.format || property.number?.format
+            }
+          }),
+          // Add any additional formatting or metadata here
+        }
+      ])
+    )
+  }
+})
 // Local state
 const loadingMore = ref(false)
 const databaseTitle = ref('')
