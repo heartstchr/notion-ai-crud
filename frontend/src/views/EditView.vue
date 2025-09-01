@@ -104,10 +104,7 @@ const loadItem = async () => {
       return
     }
 
-    console.log('--dbInfo', dbInfo)
-    console.log('--schemaToUse', schemaToUse)
-    console.log('--schemaToUse.properties.Current', schemaToUse?.properties?.Current)
-    console.log('--schemaToUse.properties.Current.number', schemaToUse?.properties?.Current?.number)
+
 
     if (!itemResult) {
       toast.add({
@@ -140,21 +137,13 @@ const loadItem = async () => {
             format: property.type === 'number' ? (property.number?.format || property.format) : undefined
           }
 
-          // Debug: Log number properties
-          if (property.type === 'number') {
-            console.log(`--Property ${fieldName}:`, {
-              original: property,
-              enriched: enrichedProperty,
-              number: property.number,
-              format: property.number?.format || property.format
-            })
-          }
+
 
           return [fieldName, enrichedProperty]
         })
       )
       : {}
-    console.log('--enrichedProperties', enrichedProperties)
+
     // Set enriched properties as item
     item.value = enrichedProperties
 

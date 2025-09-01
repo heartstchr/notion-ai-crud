@@ -403,8 +403,6 @@ class NotionMiddleware {
       return {}
     }
 
-    console.log('schema.properties', schema.properties)
-
     // If this is a database schema (processed by generateSchema), return the properties
     if (
       schema.properties &&
