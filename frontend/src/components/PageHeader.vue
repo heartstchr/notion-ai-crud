@@ -4,7 +4,7 @@
     <div v-if="showBackButton" class="flex items-center gap-4 mb-4">
       <button @click="$emit('goBack')" class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
         <i class="pi pi-arrow-left"></i>
-        Back to Pool
+        Back
       </button>
     </div>
 

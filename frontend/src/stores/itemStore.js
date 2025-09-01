@@ -26,7 +26,7 @@ export const useItemStore = defineStore('item', () => {
   const isFullyLoaded = computed(() => hasSchema.value && hasDatabaseInfo.value)
 
   const formFields = computed(() => {
-    if (!schema.value) return []
+    if (!schema.value) return {}
     return itemService.generateFormFields(schema.value)
   })
 
@@ -112,6 +112,7 @@ export const useItemStore = defineStore('item', () => {
         description: databaseInfo.value.description,
         schema: databaseInfo.value.schema,
       }
+      console.log('--result', result)
       // Returning database info
       return result
     }

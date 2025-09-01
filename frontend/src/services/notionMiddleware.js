@@ -5,6 +5,7 @@ import {
   mapNotionTypeToFormType as mapTypeFromUtils,
   generatePlaceholder as generatePlaceholderFromUtils,
   getFieldIcon as getDefaultIconFromUtils,
+  getDefaultIcon,
 } from '../utils/mappingUtils.js'
 
 class NotionMiddleware {
@@ -206,7 +207,6 @@ class NotionMiddleware {
   // Generate schema from raw Notion properties
   static generateSchema(properties, title = 'Database') {
     // generateSchema called
-
     const schemaProperties = {}
 
     Object.entries(properties || {}).forEach(([key, property]) => {
@@ -229,6 +229,9 @@ class NotionMiddleware {
           icon: extractedIcon || defaultIcon,
           // Extract emoji if available
           emoji: extractedEmoji,
+          // Preserve number format information and full number object
+          number: property.type === 'number' ? property.number : undefined,
+          format: property.type === 'number' ? property.number?.format : undefined,
         }
 
         // Add options for select and multiselect fields
@@ -394,55 +397,71 @@ class NotionMiddleware {
   }
 
   // Generate form fields from schema
+  // Generate form fields from raw Notion API schema - returns raw properties
   static generateFormFields(schema) {
     if (!schema || !schema.properties) {
-      return []
+      return {}
     }
 
-    const fields = []
+    console.log('schema.properties', schema.properties)
+
+    // If this is a database schema (processed by generateSchema), return the properties
+    if (
+      schema.properties &&
+      Object.values(schema.properties).some((prop) => prop.type && !prop[prop.type])
+    ) {
+      return schema.properties
+    }
+
+    // If this is raw Notion API response (has actual values), we need to extract field definitions
+    // For now, we'll create a basic field definition from the raw properties
+    const fieldDefinitions = {}
 
     Object.entries(schema.properties).forEach(([key, property]) => {
-      const field = {
-        name: key,
+      fieldDefinitions[key] = {
+        type: property.type,
+        required: false,
         label: this.formatLabel(key),
-        type: this.mapNotionTypeToFormType(property.type),
-        required: property.required || false,
         placeholder: this.generatePlaceholder(key, property.type),
-        // Include icon information with fallback to default icons
-        icon: this.extractPropertyIcon(property) || this.getDefaultIcon(key, property.type),
-        emoji: this.extractPropertyEmoji(property) || null,
+        icon: this.getDefaultIcon(key, property.type, property.number?.format),
+        // For select/multi_select, extract options from the actual values
+        options:
+          property.type === 'select' || property.type === 'multi_select'
+            ? this.extractOptionsFromValues(property)
+            : [],
+        // Preserve number format information and full number object
+        format: property.type === 'number' ? property.number?.format : undefined,
+        number: property.type === 'number' ? property.number : undefined,
+        // Preserve other property metadata
+        id: property.id,
+        ...property,
       }
-
-      // Add options for select fields
-      if (property.options && property.options.length > 0) {
-        // Adding options for field
-        field.options = property.options.map((option) => ({
-          value: option.name,
-          label: option.name,
-          color: option.color,
-        }))
-      } else {
-        // No options for field
-      }
-
-      // Add specific configurations
-      if (property.type === 'number') {
-        field.min = 0
-        field.step = property.format === 'dollar' ? 0.01 : 1
-      }
-
-      if (property.type === 'email') {
-        field.pattern = '[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$'
-      }
-
-      if (property.type === 'url') {
-        field.pattern = 'https?://.+'
-      }
-
-      fields.push(field)
     })
 
-    return fields
+    return fieldDefinitions
+  }
+
+  // Helper method to extract options from actual values
+  static extractOptionsFromValues(property) {
+    if (property.type === 'select' && property.select) {
+      return [
+        {
+          value: property.select.name,
+          label: property.select.name,
+          color: property.select.color,
+        },
+      ]
+    }
+
+    if (property.type === 'multi_select' && property.multi_select) {
+      return property.multi_select.map((item) => ({
+        value: item.name,
+        label: item.name,
+        color: item.color,
+      }))
+    }
+
+    return []
   }
 
   // Generate placeholder text
@@ -541,8 +560,8 @@ class NotionMiddleware {
   }
 
   // Get default icon for field based on name or type
-  static getDefaultIcon(fieldName, type) {
-    return getDefaultIconFromUtils(fieldName, type)
+  static getDefaultIcon(fieldName, type, format) {
+    return getDefaultIcon(fieldName, type, format)
   }
 }
 

@@ -1,7 +1,7 @@
 <template>
   <div class="add-view">
     <!-- Header -->
-    <PageHeader mode="add" :database-title="databaseTitle" :show-back-button="false" />
+    <PageHeader mode="add" :database-title="databaseTitle" :show-back-button="true" @go-back="goBack" />
 
     <!-- Loading State -->
     <LoadingSkeleton v-if="loading" :count="1" />
@@ -22,8 +22,8 @@
 
     <!-- Form -->
     <FormFields :editing-item="null" :schema="schema" :loading="loading" :submitting="submitting" :form-data="formData"
-      :form-errors="formErrors" :form-fields="formFields" @submit-form="submitForm" @refresh-schema="retryLoad"
-      @update:form-data="updateFormData" @cancel-form="goBack" />
+      :form-errors="formErrors" :form-fields="schema?.properties || {}" @submit-form="submitForm"
+      @refresh-schema="retryLoad" @update:form-data="updateFormData" @cancel-form="goBack" />
 
     <!-- Toast for notifications -->
     <Toast />
@@ -55,12 +55,6 @@ const schema = computed(() => itemStore.schema)
 const formData = ref({})
 const formErrors = ref({})
 const databaseTitle = ref('')
-
-// Computed
-const formFields = computed(() => {
-  if (!schema.value) return []
-  return itemStore.formFields
-})
 
 // Methods
 const loadSchema = async () => {
@@ -130,7 +124,6 @@ const submitForm = async () => {
       life: 3000
     })
 
-    // Navigate back to pool
     router.push('/')
   } catch {
     toast.add({

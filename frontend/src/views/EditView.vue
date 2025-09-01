@@ -5,8 +5,8 @@
       <PageHeader mode="edit" :database-title="databaseTitle" :show-back-button="true" @go-back="goBack" />
 
       <!-- Loading State -->
-      <div v-if="loading">
-        <LoadingSkeleton :count="1" container-class="bg-white rounded-lg shadow-sm border border-gray-200 p-6" />
+      <div v-if="loading || (!item && !error)">
+        <LoadingSkeleton :count="3" container-class="bg-white rounded-lg shadow-sm border border-gray-200 p-6" />
       </div>
 
       <!-- Error State -->
@@ -16,7 +16,7 @@
           <div class="flex-1">
             <strong class="text-red-800">Error:</strong>
             <span class="text-red-700">{{ error }}</span>
-            <button @click="retryLoad" class="ml-2 text-red-600 hover:text-red-800 underline">
+            <button @click="retryLoad" class="ml-2 text-red-600 hover:text-red-800 underline transition-colors">
               Try Again
             </button>
           </div>
@@ -24,21 +24,9 @@
       </div>
 
       <!-- Edit Form -->
-      <div v-else-if="item && schema" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <FormFields :editing-item="item" :schema="schema" :loading="loading" :submitting="submitting"
-          :form-data="formData" :form-errors="formErrors" :form-fields="formFields" @submit-form="submitForm"
+      <div v-else-if="isFormReady" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <FormFields :editing-item="item" :submitting="submitting" :form-errors="formErrors" @submit-form="submitForm"
           @refresh-schema="retryLoad" @update:form-data="updateFormData" @cancel-form="goBack" />
-      </div>
-
-      <!-- Not Found State -->
-      <div v-else-if="!item && !loading" class="text-center py-16">
-        <div class="text-6xl mb-4">❌</div>
-        <h3 class="text-2xl font-semibold text-gray-900 mb-2">{{ databaseTitle }} Not Found</h3>
-        <p class="text-gray-600 mb-6">The {{ databaseTitle.toLowerCase() }} you're looking for doesn't exist or has been
-          removed.</p>
-        <button @click="goBack" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          Back to Pool
-        </button>
       </div>
     </div>
 
@@ -48,7 +36,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useItemStore } from '../stores/itemStore.js'
@@ -66,58 +54,114 @@ const itemStore = useItemStore()
 // Computed properties from store
 const loading = computed(() => itemStore.loading)
 const error = computed(() => itemStore.error)
-const schema = computed(() => itemStore.schema)
 const submitting = computed(() => itemStore.submitting)
 
 // Local state
 const item = ref(null)
-const formData = ref({})
 const formErrors = ref({})
 const databaseTitle = ref('')
+const rawSchema = ref(null)
+const isLoadingItem = ref(false)
 
-// Computed
-const formFields = computed(() => {
-  if (!schema.value) return []
-  return itemStore.formFields
-})
+// Computed properties
+const isFormReady = computed(() => item.value && rawSchema.value && !loading.value && !error.value)
+
+// Validation regex patterns (memoized)
+const VALIDATION_PATTERNS = {
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  phone: /^[+]?[1-9][\d]{0,15}$/
+}
 
 // Methods
 const loadItem = async () => {
-  try {
-    const itemId = route.params.id
+  const itemId = route.params.id
+  if (!itemId) return
 
-    if (!itemId) {
-      console.error('No item ID provided')
+  try {
+    isLoadingItem.value = true
+    formErrors.value = {}
+
+    // Load item data and ensure schema is loaded
+    const [itemResult, schemaResult] = await Promise.all([
+      itemStore.fetchItem(itemId),
+      itemStore.ensureSchemaLoaded().then(() => itemStore.schema)
+    ])
+
+    // Get database info (synchronous, no await needed)
+    const dbInfo = itemStore.getDatabaseInfo()
+
+    // Use database info if available, otherwise fall back to schema from store
+    const schemaToUse = dbInfo?.schema || schemaResult
+    const titleToUse = dbInfo?.title || schemaResult?.title || 'Item'
+
+    if (!schemaToUse) {
+      toast.add({
+        severity: 'error',
+        summary: 'Schema Error',
+        detail: 'Failed to load database schema. Please try again.',
+        life: 3000
+      })
       return
     }
 
-    // Ensure schema is loaded first
-    if (!itemStore.schema) {
-      await itemStore.fetchSchema()
-    }
-
-    // Load item data from store
-    const itemResult = await itemStore.fetchItem(itemId)
+    console.log('--dbInfo', dbInfo)
+    console.log('--schemaToUse', schemaToUse)
+    console.log('--schemaToUse.properties.Current', schemaToUse?.properties?.Current)
+    console.log('--schemaToUse.properties.Current.number', schemaToUse?.properties?.Current?.number)
 
     if (!itemResult) {
-      console.error('Item not found')
-      item.value = null // Ensure item is null so the "not found" UI shows
+      toast.add({
+        severity: 'error',
+        summary: 'Item Not Found',
+        detail: 'The item you are trying to edit does not exist.',
+        life: 3000
+      })
+      router.push('/')
       return
     }
 
-    item.value = itemResult
+    // Set raw schema and database title
+    rawSchema.value = schemaToUse
+    databaseTitle.value = titleToUse
 
-    // Initialize form data with normalized values
-    formData.value = normalizeItemData(item.value, itemStore.schema)
+    // Create enriched properties with embedded values from schema
+    const enrichedProperties = schemaToUse?.properties
+      ? Object.fromEntries(
+        Object.entries(schemaToUse.properties).map(([fieldName, property]) => {
+          const enrichedProperty = {
+            ...property,
+            value: itemResult[fieldName] || '',
+            name: property.name || fieldName,
+            // Ensure nested objects are preserved
+            number: property.number || null,
+            select: property.select || null,
+            multi_select: property.multi_select || null,
+            // Ensure format is explicitly set for number fields
+            format: property.type === 'number' ? (property.number?.format || property.format) : undefined
+          }
 
-    // Update database title from store
-    const dbInfo = itemStore.getDatabaseInfo()
-    if (dbInfo && dbInfo.title) {
-      databaseTitle.value = dbInfo.title
-    }
+          // Debug: Log number properties
+          if (property.type === 'number') {
+            console.log(`--Property ${fieldName}:`, {
+              original: property,
+              enriched: enrichedProperty,
+              number: property.number,
+              format: property.number?.format || property.format
+            })
+          }
+
+          return [fieldName, enrichedProperty]
+        })
+      )
+      : {}
+    console.log('--enrichedProperties', enrichedProperties)
+    // Set enriched properties as item
+    item.value = enrichedProperties
+
   } catch (err) {
     console.error('Error loading item:', err)
-    // Error is already set in the store, no need to set it again
+  } finally {
+    isLoadingItem.value = false
   }
 }
 
@@ -125,100 +169,39 @@ const retryLoad = () => {
   loadItem()
 }
 
-const normalizeItemData = (item, schema) => {
-  // Filter out Notion internal properties and only include schema-defined properties
-  const normalizedData = {}
-
-  // Normalizing item data
-
-  if (schema && schema.properties) {
-    Object.keys(schema.properties).forEach(propertyName => {
-      const property = schema.properties[propertyName]
-      const value = item[propertyName]
-
-      if (property.type === 'multiselect') {
-        // Handle multiselect fields - ensure they're arrays
-        if (Array.isArray(value)) {
-          normalizedData[propertyName] = value
-        } else if (typeof value === 'string' && value) {
-          try {
-            // Try to parse JSON first
-            const parsed = JSON.parse(value)
-            normalizedData[propertyName] = Array.isArray(parsed) ? parsed : []
-          } catch {
-            // If not JSON, split by comma
-            normalizedData[propertyName] = value.split(',').map(v => v.trim()).filter(v => v)
-          }
-        } else {
-          normalizedData[propertyName] = []
-        }
-      } else if (property.type === 'select') {
-        // Handle select fields - ensure they have a value
-        normalizedData[propertyName] = value || ''
-      } else if (property.type === 'checkbox') {
-        // Handle checkbox fields - ensure they're boolean
-        normalizedData[propertyName] = Boolean(value)
-      } else if (property.type === 'title') {
-        // Handle title fields - ensure they have a value
-        normalizedData[propertyName] = value || ''
-      } else if (property.type === 'rich_text') {
-        // Handle rich text fields - ensure they have a value
-        normalizedData[propertyName] = value || ''
-      } else if (property.type === 'number') {
-        // Handle number fields - ensure they have a value
-        normalizedData[propertyName] = value || 0
-      } else if (property.type === 'date') {
-        // Handle date fields - ensure they have a value
-        normalizedData[propertyName] = value || ''
-      } else if (property.type === 'email') {
-        // Handle email fields - ensure they have a value
-        normalizedData[propertyName] = value || ''
-      } else if (property.type === 'phone_number') {
-        // Handle phone number fields - ensure they have a value
-        normalizedData[propertyName] = value || ''
-      } else if (property.type === 'url') {
-        // Handle URL fields - ensure they have a value
-        normalizedData[propertyName] = value || ''
-      } else if (property.type === 'status') {
-        // Handle status fields - ensure they have a value
-        normalizedData[propertyName] = value || ''
-      } else {
-        // For any other property type, include the value as is
-        normalizedData[propertyName] = value || ''
-      }
-    })
-  }
-
-  // Normalized data result
-  return normalizedData
-}
-
 const updateFormData = (newFormData) => {
-  formData.value = newFormData
-  // Clear errors when form data changes
+  // Update the values in enriched properties
+  Object.entries(newFormData).forEach(([key, value]) => {
+    if (item.value[key]) {
+      item.value[key].value = value
+    }
+  })
+  // Clear errors when user starts typing
   formErrors.value = {}
 }
 
 const submitForm = async () => {
+  if (submitting.value) return // Prevent double submission
+
   try {
     formErrors.value = {}
 
-    // Submitting form with data
-    // Schema available
+    // Extract form data from enriched properties
+    const formDataToSubmit = Object.fromEntries(
+      Object.entries(item.value).map(([key, property]) => [key, property.value])
+    )
 
     // Validate form data
-    const validation = itemStore.validateFormData(formData.value, schema.value)
-    // Validation result
-
+    const validation = validateFormData(formDataToSubmit, item.value)
     if (!validation.isValid) {
       formErrors.value = validation.errors
-      // Validation failed
       return
     }
 
     // Update item
-    await itemStore.updateItem(item.value.id, formData.value)
+    await itemStore.updateItem(item.value.id, formDataToSubmit, item.value)
 
+    // Show success message
     toast.add({
       severity: 'success',
       summary: 'Success',
@@ -226,14 +209,16 @@ const submitForm = async () => {
       life: 3000
     })
 
-    // Navigate back to pool
+    // Navigate back after a brief delay for better UX
+    await nextTick()
     router.push('/')
 
   } catch (error) {
     console.error('Update failed:', error)
 
-    // Show specific error message if available
-    const errorMessage = itemStore.error || error?.message || `Failed to update ${databaseTitle.value.toLowerCase()}`
+    const errorMessage = itemStore.error ||
+      error?.message ||
+      `Failed to update ${databaseTitle.value.toLowerCase()}`
 
     toast.add({
       severity: 'error',
@@ -244,16 +229,76 @@ const submitForm = async () => {
   }
 }
 
+const validateFormData = (data, enrichedProperties) => {
+  const errors = {}
+
+  if (!enrichedProperties) {
+    return { isValid: true, errors: {} }
+  }
+
+  Object.entries(enrichedProperties).forEach(([key, property]) => {
+    const value = data[key]
+    const trimmedValue = value?.toString().trim()
+
+    // Check required fields
+    if (property.required && (!value || trimmedValue === '')) {
+      errors[key] = `${formatLabel(key)} is required`
+      return
+    }
+
+    // Type-specific validation (only if value exists)
+    if (value && trimmedValue !== '') {
+      switch (property.type) {
+        case 'email': {
+          if (!VALIDATION_PATTERNS.email.test(value)) {
+            errors[key] = 'Please enter a valid email address'
+          }
+          break
+        }
+        case 'url': {
+          try {
+            new URL(value)
+          } catch {
+            if (!value.startsWith('http://') && !value.startsWith('https://')) {
+              errors[key] = 'Please enter a valid URL (include http:// or https://)'
+            }
+          }
+          break
+        }
+        case 'phone_number': {
+          const cleanPhone = value.replace(/[\s\-()]/g, '')
+          if (!VALIDATION_PATTERNS.phone.test(cleanPhone)) {
+            errors[key] = 'Please enter a valid phone number'
+          }
+          break
+        }
+      }
+    }
+  })
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  }
+}
+
+const formatLabel = (fieldName) => {
+  return fieldName
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim()
+}
+
 const goBack = () => {
   router.push('/')
 }
 
 // Watch for route parameter changes
-watch(() => route.params.id, (newId) => {
-  if (newId) {
+watch(() => route.params.id, (newId, oldId) => {
+  if (newId && newId !== oldId) {
     loadItem()
   }
-})
+}, { immediate: false })
 
 // Lifecycle
 onMounted(() => {

@@ -121,6 +121,116 @@ export const fieldTypeIconMap = {
   status: 'pi pi-info-circle',
 }
 
+// Get default icon for a field based on type and format
+export const getDefaultIcon = (fieldName, type, format) => {
+  // Check for dollar format first
+  if (type === 'number' && format === 'dollar') {
+    return 'pi pi-dollar'
+  }
+
+  // Return type-based icon
+  return fieldTypeIconMap[type] || 'pi pi-tag'
+}
+
+// Format field name to display label
+export const formatLabel = (fieldName) => {
+  return fieldName
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim()
+}
+
+// Generate placeholder text for form fields
+export const generatePlaceholder = (fieldName, type, format) => {
+  const placeholders = {
+    email: 'Enter email address',
+    phone_number: 'Enter phone number',
+    url: 'Enter URL',
+    number: format === 'dollar' ? 'Enter amount' : 'Enter number',
+    date: 'Select date',
+    title: 'Enter title',
+    rich_text: 'Enter description',
+  }
+
+  return placeholders[type] || `Enter ${formatLabel(fieldName).toLowerCase()}`
+}
+
+// Extract options from raw Notion property
+export const extractOptionsFromRawProperty = (property) => {
+  if (property.type === 'select' && property.select) {
+    return [
+      {
+        value: property.select.name,
+        label: property.select.name,
+        color: property.select.color,
+      },
+    ]
+  }
+
+  if (property.type === 'multi_select' && property.multi_select) {
+    return property.multi_select.map((item) => ({
+      value: item.name,
+      label: item.name,
+      color: item.color,
+    }))
+  }
+
+  return []
+}
+
+// Convert form value to raw Notion format
+export const convertToRawNotionFormat = (fieldName, value, type) => {
+  switch (type) {
+    case 'title':
+      return {
+        type: 'title',
+        title: value ? [{ type: 'text', text: { content: value } }] : [],
+      }
+    case 'rich_text':
+      return {
+        type: 'rich_text',
+        rich_text: value ? [{ type: 'text', text: { content: value } }] : [],
+      }
+    case 'number':
+      return {
+        type: 'number',
+        number: value || null,
+      }
+    case 'email':
+      return {
+        type: 'email',
+        email: value || null,
+      }
+    case 'phone_number':
+      return {
+        type: 'phone_number',
+        phone_number: value || null,
+      }
+    case 'url':
+      return {
+        type: 'url',
+        url: value || null,
+      }
+    case 'checkbox':
+      return {
+        type: 'checkbox',
+        checkbox: Boolean(value),
+      }
+    case 'select':
+      return {
+        type: 'select',
+        select: value ? { name: value } : null,
+      }
+    case 'multi_select':
+      return {
+        type: 'multi_select',
+        multi_select: Array.isArray(value) ? value.map((v) => ({ name: v })) : [],
+      }
+    default:
+      return value
+  }
+}
+
 // ===== TYPE MAPPINGS =====
 
 // Notion type to form input type mappings
@@ -399,29 +509,7 @@ export const mapNotionTypeToFormType = (notionType) => {
 
 // ===== PLACEHOLDER FUNCTIONS =====
 
-// Generate placeholder text for field
-export const generatePlaceholder = (fieldName, type) => {
-  // Check if we have a specific placeholder for this type
-  if (fieldTypePlaceholderMap[type]) {
-    return fieldTypePlaceholderMap[type]
-  }
-
-  // Generate generic placeholder
-  const label = formatFieldLabel(fieldName)
-  return `Enter ${label.toLowerCase()}`
-}
-
 // ===== UTILITY FUNCTIONS =====
-
-// Format field name to readable label
-export const formatFieldLabel = (fieldName) => {
-  if (!fieldName) return ''
-
-  return fieldName
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (str) => str.toUpperCase())
-    .trim()
-}
 
 // ===== CURRENCY FORMATTING =====
 

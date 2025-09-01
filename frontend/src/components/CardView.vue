@@ -1,5 +1,6 @@
 <template>
-  <div class="bg-white hover:shadow-lg text-gray-900 transition-shadow p-4 border-2 border-black rounded-lg shadow-lg">
+  <div
+    class="bg-white hover:shadow-lg text-gray-900 transition-shadow p-4 border-2 border-black rounded-lg shadow-lg flex flex-col h-full">
     <!-- Action Buttons -->
     <div class="flex justify-end items-start mb-3">
       <div class="flex gap-2">
@@ -42,7 +43,7 @@
             <i :class="getContactFieldIcon(key, getSchemaProperty(key))"></i>
           </div>
           <div class="flex items-center space-x-2">
-            <span class="text-gray-800 font-medium">
+            <span class="text-gray-800 font-medium text-base">
               {{ value || 'Not provided' }}
             </span>
           </div>
@@ -76,7 +77,7 @@
     </div>
 
     <!-- Dynamic fields -->
-    <div class="space-y-3">
+    <div class="space-y-3 flex-1">
       <div v-for="[key, property] in processedFields" :key="key"
         class="space-y-1 pt-2 border-b border-gray-100 last:border-b-0">
         <!-- Field label -->
@@ -94,8 +95,8 @@
     </div>
 
     <!-- Timestamps -->
-    <div class="text-xs text-gray-500 mt-4 pt-2 border-t border-gray-100">
-      Added: {{ formatDate(item.created_time) }}
+    <div class="text-xs text-gray-500 mt-auto pt-2 border-t border-gray-100 flex flex-col justify-end">
+      <span>Added: {{ formatDate(item.created_time) }}</span>
       <span v-if="item.last_edited_time !== item.created_time">
         • Updated: {{ formatDate(item.last_edited_time) }}
       </span>
