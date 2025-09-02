@@ -1,16 +1,16 @@
 <template>
-  <div
+  <!-- Item Card -->
+  <div v-if="item && Object.keys(item).length > 0"
     class="bg-white hover:shadow-lg text-gray-900 transition-shadow p-4 border-2 border-black rounded-lg shadow-lg flex flex-col h-full">
     <!-- Action Buttons -->
     <div class="flex justify-end items-start mb-3">
       <div class="flex gap-2">
-        <button @click="editItem"
-          class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit">
-          <i class="pi pi-pencil"></i>
-        </button>
-        <button @click="deleteItem" class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
-          <i class="pi pi-trash"></i>
-        </button>
+        <Button @click="editItem"
+          class="w-10 h-10 !p-0 !bg-transparent !border-0 text-gray-600 hover:text-blue-600 hover:bg-blue-50 !transition-all !duration-300 hover:!scale-105 hover:!-translate-y-0.5 hover:!shadow-[0_20px_40px_rgba(34,197,94,0.3),0_0_20px_rgba(34,197,94,0.2)]"
+          :icon="'pi pi-pencil'" text rounded size="small" />
+        <Button @click="deleteItem"
+          class="w-10 h-10 !p-0 !bg-transparent !border-0 text-red-600 hover:bg-red-50 !transition-all !duration-300 hover:!scale-105 hover:!-translate-y-0.5 hover:!shadow-[0_20px_40px_rgba(34,197,94,0.3),0_0_20px_rgba(34,197,94,0.2)]"
+          :icon="'pi pi-times'" text rounded size="small" />
       </div>
     </div>
 
@@ -72,12 +72,12 @@
       <div class="gap-3">
         <div v-for="[key, value] in regularNumberFields" :key="key"
           class="flex-col items-center justify-between bg-gray-50 rounded-lg p-3">
-          <div class="flex items-center space-x-2 mb-2">
-            <i :class="getNumberFieldIcon(key, getSchemaProperty(key))" class="text-blue-500"></i>
-            <span class="text-sm font-medium text-gray-700" :title="formatLabel(key)">{{
-              formatLabel(key) }}</span>
-          </div>
-          <div class="flex items-center justify-end">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i :class="getNumberFieldIcon(key, getSchemaProperty(key))" class="text-blue-500"></i>
+              <span class="text-sm font-medium text-gray-700" :title="formatLabel(key)">{{
+                formatLabel(key) }}</span>
+            </div>
             <span class="text-gray-800 font-mono font-medium text-lg">
               {{ formatNumber(value || 0, key) }}
             </span>
@@ -105,10 +105,9 @@
         </div>
       </div>
     </div>
-
     <!-- Dynamic fields -->
     <div class="space-y-3 flex-1">
-      <div v-for="[key, property] in processedFields" :key="key"
+      <div v-for="[key, property] in processedFieldsForRender" :key="key"
         class="space-y-1 pt-2 border-b border-gray-100 last:border-b-0">
         <!-- Field label -->
         <div v-if="shouldShowLabel(key)" class="text-sm font-medium text-gray-700 mb-2">
@@ -118,24 +117,25 @@
         </div>
 
         <!-- Field content -->
-        <component :is="getFieldRenderer(key, item[key])" :value="item[key]" :field-name="key" :schema="schema"
+        <component :is="getFieldRenderer(key)" :value="item[key]" :field-name="key" :schema="schema"
           :format-label="formatLabel" :format-number="formatNumber" :get-schema-property="getSchemaProperty"
           :get-field-currency-symbol="getFieldCurrencySymbol" />
       </div>
     </div>
 
     <!-- Timestamps -->
-    <div class="text-xs text-gray-500 mt-auto pt-2 border-t border-gray-100 flex flex-col justify-end">
+    <div class="text-xs text-gray-500 mt-auto pt-2 border-t border-gray-100 flex flex-row justify-end">
       <span>Added: {{ formatDate(item.created_time) }}</span>
       <span v-if="item.last_edited_time !== item.created_time">
         • Updated: {{ formatDate(item.last_edited_time) }}
       </span>
     </div>
   </div>
+
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   formatNumberBySchema,
@@ -144,21 +144,23 @@ import {
 } from '../utils/mappingUtils.js'
 import NotionMiddleware from '../services/notionMiddleware.js'
 
-// Async components for better performance
-const RichTextField = defineAsyncComponent(() => import('./field-renderers/RichTextField.vue'))
-const ContactField = defineAsyncComponent(() => import('./field-renderers/ContactField.vue'))
-const NumbersField = defineAsyncComponent(() => import('./field-renderers/NumbersField.vue'))
-const UrlField = defineAsyncComponent(() => import('./field-renderers/UrlField.vue'))
-const DateField = defineAsyncComponent(() => import('./field-renderers/DateField.vue'))
-const SelectField = defineAsyncComponent(() => import('./field-renderers/SelectField.vue'))
-const BooleanField = defineAsyncComponent(() => import('./field-renderers/BooleanField.vue'))
-const TextField = defineAsyncComponent(() => import('./field-renderers/TextField.vue'))
 
-// PrimeVue components
-const Avatar = defineAsyncComponent(() => import('primevue/avatar'))
+
+// Direct imports for better performance - async components are unnecessary overhead
+import RichTextField from './field-renderers/RichTextField.vue'
+import ContactField from './field-renderers/ContactField.vue'
+import NumbersField from './field-renderers/NumbersField.vue'
+import UrlField from './field-renderers/UrlField.vue'
+import DateField from './field-renderers/DateField.vue'
+import SelectField from './field-renderers/SelectField.vue'
+import BooleanField from './field-renderers/BooleanField.vue'
+import TextField from './field-renderers/TextField.vue'
+import Avatar from 'primevue/avatar'
 
 // Composables
 const router = useRouter()
+
+
 
 const props = defineProps({
   item: {
@@ -168,6 +170,10 @@ const props = defineProps({
   schema: {
     type: Object,
     default: null
+  },
+  loading: {
+    type: Boolean,
+    default: false
   },
   editRoute: {
     type: String,
@@ -181,133 +187,91 @@ const props = defineProps({
 
 const emit = defineEmits(['deleteItem'])
 
-// Computed properties for better performance
-const titleFields = computed(() => {
-  if (!props.schema?.properties) return []
-
-  return Object.entries(props.schema.properties)
-    .filter(([_, property]) => property.type === 'title' && props.item[_])
-    .map(([key]) => [key, props.item[key]])
-})
-
-const contactFields = computed(() => {
-  if (!props.schema?.properties) return []
-
-  return Object.entries(props.schema.properties)
-    .filter(([key, property]) => {
-      // Check if it's a contact-related field
-      const isContactField = key.toLowerCase().includes('email') ||
-        key.toLowerCase().includes('phone') ||
-        key.toLowerCase().includes('contact') ||
-        property.type === 'email' ||
-        property.type === 'phone'
-      return isContactField && props.item[key]
-    })
-    .map(([key]) => [key, props.item[key]])
-})
-
-const booleanFields = computed(() => {
-  if (!props.schema?.properties) return []
-
-  return Object.entries(props.schema.properties)
-    .filter(([, property]) => property.type === 'checkbox')
-    .map(([key]) => [key, props.item[key] || false])
-})
-
-const currencyNumberFields = computed(() => {
-  if (!props.schema?.properties) return []
-
-  const fields = Object.entries(props.schema.properties)
-    .filter(([, property]) =>
-      property.type === 'number' &&
-      property.number?.format &&
-      property.number?.format !== 'number'
-    )
-    .map(([key]) => [key, props.item[key] || 0])
-
-  console.log('Currency Number Fields:', fields.length, fields)
-  return fields
-})
-
-const regularNumberFields = computed(() => {
-  if (!props.schema?.properties) return []
-
-  const fields = Object.entries(props.schema.properties)
-    .filter(([, property]) =>
-      property.type === 'number' &&
-      (!property.number?.format || property.number?.format === 'number')
-    )
-    .map(([key]) => [key, props.item[key] || 0])
-
-  console.log('Regular Number Fields:', fields.length, fields)
-  return fields
-})
-
-const urlFields = computed(() => {
-  if (!props.schema?.properties) return []
-
-  return Object.entries(props.schema.properties)
-    .filter(([, property]) => property.type === 'url')
-    .map(([key]) => [key, props.item[key]])
-})
-
+// Memoized field processing for better performance
 const processedFields = computed(() => {
-  if (!props.schema?.properties) return []
+  if (!props.schema?.properties || !props.item) return { titleFields: [], contactFields: [], booleanFields: [], currencyNumberFields: [], regularNumberFields: [], urlFields: [], otherFields: [] }
 
-  return Object.entries(props.schema.properties)
-    .filter(([key, property]) => {
-      // Check if it's a contact-related field
-      const isContactField = key.toLowerCase().includes('email') ||
-        key.toLowerCase().includes('phone') ||
-        key.toLowerCase().includes('contact') ||
-        property.type === 'email' ||
-        property.type === 'phone'
+  const schemaProps = props.schema.properties
+  const itemData = props.item
 
-      return key !== 'contact' &&
-        key !== 'numbers' &&
-        property.type !== 'title' &&
-        property.type !== 'number' &&
-        property.type !== 'checkbox' &&
-        property.type !== 'url' &&
-        !isContactField
-    })
-    .map(([key]) => [key, props.schema.properties[key]])
-})
-
-// Field type detection cache
-const fieldTypeCache = new Map()
-
-const getFieldType = (value) => {
-  if (fieldTypeCache.has(value)) {
-    return fieldTypeCache.get(value)
+  // Process all fields in one pass to avoid multiple Object.entries() calls
+  const result = {
+    titleFields: [],
+    contactFields: [],
+    booleanFields: [],
+    currencyNumberFields: [],
+    regularNumberFields: [],
+    urlFields: [],
+    otherFields: []
   }
 
-  let type = 'text'
+  Object.entries(schemaProps).forEach(([key, property]) => {
+    const value = itemData[key]
 
-  if (isRichText(value)) type = 'richText'
-  else if (isUrl(value)) type = 'url'
-  else if (isDate(value)) type = 'date'
-  else if (isSelect(value)) type = 'select'
-  else if (typeof value === 'boolean') type = 'boolean'
-  else if (typeof value === 'number') type = 'number'
-  else if (typeof value === 'string' && value) type = 'text'
+    if (!value && property.type !== 'checkbox') return // Skip empty values except checkboxes
 
-  fieldTypeCache.set(value, type)
-  return type
-}
+    switch (property.type) {
+      case 'title':
+        result.titleFields.push([key, value])
+        break
+      case 'checkbox':
+        result.booleanFields.push([key, value || false])
+        break
+      case 'number':
+        if (property.number?.format && property.number.format !== 'number') {
+          result.currencyNumberFields.push([key, value || 0])
+        } else {
+          result.regularNumberFields.push([key, value || 0])
+        }
+        break
+      case 'url':
+        result.urlFields.push([key, value])
+        break
+      default: {
+        // Check if it's a contact-related field
+        const isContactField = key.toLowerCase().includes('email') ||
+          key.toLowerCase().includes('phone') ||
+          key.toLowerCase().includes('contact') ||
+          property.type === 'email' ||
+          property.type === 'phone'
 
-const getFieldRenderer = (key, value) => {
+        if (isContactField) {
+          result.contactFields.push([key, value])
+        } else if (property.type !== 'title' && property.type !== 'number' && property.type !== 'checkbox' && property.type !== 'url') {
+          result.otherFields.push([key, property])
+        }
+      }
+    }
+  })
+
+  return result
+})
+
+// Destructure computed results for cleaner template usage
+const titleFields = computed(() => processedFields.value.titleFields)
+const contactFields = computed(() => processedFields.value.contactFields)
+const booleanFields = computed(() => processedFields.value.booleanFields)
+const currencyNumberFields = computed(() => processedFields.value.currencyNumberFields)
+const regularNumberFields = computed(() => processedFields.value.regularNumberFields)
+const urlFields = computed(() => processedFields.value.urlFields)
+const processedFieldsForRender = computed(() => processedFields.value.otherFields)
+
+// Simplified field renderer selection based on schema type
+const getFieldRenderer = (key) => {
   if (key === 'contact') return ContactField
   if (key === 'numbers') return NumbersField
 
-  const type = getFieldType(value)
+  // Use schema type directly instead of complex detection
+  const property = props.schema?.properties?.[key]
+  if (!property) return TextField
 
-  switch (type) {
-    case 'richText': return RichTextField
+  switch (property.type) {
+    case 'rich_text': return RichTextField
     case 'url': return UrlField
     case 'date': return DateField
-    case 'select': return SelectField
-    case 'boolean': return BooleanField
+    case 'select':
+    case 'multi_select': return SelectField
+    case 'checkbox': return BooleanField
     default: return TextField
   }
 }
@@ -391,30 +355,7 @@ const getFieldCurrencySymbol = (fieldName) => {
   return fallbackSymbols[property.number.format] || property.number.format.toUpperCase()
 }
 
-// Field type detection functions
-const isRichText = (value) => {
-  return value && typeof value === 'object' && (value.rich_text || value.title)
-}
 
-const isUrl = (value) => {
-  return value && typeof value === 'object' && value.type === 'url' && value.url
-}
-
-const isDate = (value) => {
-  return value && typeof value === 'object' && value.type === 'date' && value.date
-}
-
-const isSelect = (value) => {
-  if (value && typeof value === 'object' && (value.type === 'select' || value.type === 'multi_select')) {
-    return true
-  }
-
-  if (Array.isArray(value) && value.length > 0) {
-    return typeof value[0] === 'string' || (typeof value[0] === 'object' && value[0].name)
-  }
-
-  return false
-}
 
 const formatNumber = (number, fieldName = null) => {
   if (typeof number !== 'number') return number

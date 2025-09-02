@@ -4,9 +4,11 @@
     <div class="flex-1">
       <strong class="text-red-800">Error:</strong>
       <span class="text-red-700">{{ error }}</span>
-      <button @click="retry" class="ml-2 p-0 h-auto text-red-600 hover:text-red-800 underline">
+      <Button @click="retry"
+        class="ml-2 !p-0 !h-auto !bg-transparent !border-0 text-red-600 hover:text-red-800 underline" text
+        severity="danger">
         Try Again
-      </button>
+      </Button>
     </div>
   </div>
 </template>

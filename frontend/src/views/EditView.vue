@@ -11,9 +11,11 @@
           <div class="flex-1">
             <strong class="text-red-800">Error:</strong>
             <span class="text-red-700">{{ error }}</span>
-            <button @click="retryLoad" class="ml-2 text-red-600 hover:text-red-800 underline transition-colors">
+            <Button @click="retryLoad"
+              class="ml-2 !p-0 !bg-transparent !border-0 text-red-600 hover:text-red-800 underline !transition-colors"
+              text severity="danger">
               Try Again
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -31,6 +33,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useItemStore } from '../stores/itemStore.js'
+import ValidationService from '../services/validationService.js'
 import LoadingSkeleton from '../components/LoadingSkeleton.vue'
 import PageHeader from '../components/PageHeader.vue'
 
@@ -57,11 +60,7 @@ const isLoadingItem = ref(false)
 // Computed properties
 const isFormReady = computed(() => item.value && rawSchema.value && !loading.value && !error.value)
 
-// Validation regex patterns (memoized)
-const VALIDATION_PATTERNS = {
-  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  phone: /^[+]?[1-9][\d]{0,15}$/
-}
+// Validation service is now imported and used
 
 // Methods
 const loadItem = async () => {
@@ -211,63 +210,28 @@ const submitForm = async () => {
 }
 
 const validateFormData = (data, enrichedProperties) => {
-  const errors = {}
-
-  if (!enrichedProperties) {
-    return { isValid: true, errors: {} }
+  // Convert enriched properties to schema format for validation service
+  const schema = {
+    properties: Object.fromEntries(
+      Object.entries(enrichedProperties).map(([key, property]) => [
+        key,
+        {
+          type: property.type,
+          required: property.required || false,
+          number: property.number,
+          options: property.options,
+          minLength: property.minLength,
+          maxLength: property.maxLength
+        }
+      ])
+    )
   }
 
-  Object.entries(enrichedProperties).forEach(([key, property]) => {
-    const value = data[key]
-    const trimmedValue = value?.toString().trim()
-
-    // Check required fields
-    if (property.required && (!value || trimmedValue === '')) {
-      errors[key] = `${formatLabel(key)} is required`
-      return
-    }
-
-    // Type-specific validation (only if value exists)
-    if (value && trimmedValue !== '') {
-      switch (property.type) {
-        case 'email': {
-          if (!VALIDATION_PATTERNS.email.test(value)) {
-            errors[key] = 'Please enter a valid email address'
-          }
-          break
-        }
-        case 'url': {
-          try {
-            new URL(value)
-          } catch {
-            if (!value.startsWith('http://') && !value.startsWith('https://')) {
-              errors[key] = 'Please enter a valid URL (include http:// or https://)'
-            }
-          }
-          break
-        }
-        case 'phone_number': {
-          const cleanPhone = value.replace(/[\s\-()]/g, '')
-          if (!VALIDATION_PATTERNS.phone.test(cleanPhone)) {
-            errors[key] = 'Please enter a valid phone number'
-          }
-          break
-        }
-      }
-    }
-  })
-
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors,
-  }
+  return ValidationService.validateFormData(data, schema)
 }
 
 const formatLabel = (fieldName) => {
-  return fieldName
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (str) => str.toUpperCase())
-    .trim()
+  return ValidationService.formatLabel(fieldName)
 }
 
 const goBack = () => {

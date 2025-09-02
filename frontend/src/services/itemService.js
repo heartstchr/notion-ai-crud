@@ -2,6 +2,7 @@
 // Service layer for managing items with dynamic schema support
 
 import NotionMiddleware from './notionMiddleware.js'
+import ValidationService from './validationService.js'
 
 const API_BASE = '/.netlify/functions'
 
@@ -206,7 +207,7 @@ class ItemService {
 
   // Validate form data based on schema
   validateFormData(data, schema) {
-    return NotionMiddleware.validateFormData(data, schema)
+    return ValidationService.validateFormData(data, schema)
   }
 }
 

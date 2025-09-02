@@ -1,112 +1,82 @@
 <template>
-    <div :class="containerClass">
-        <div v-for="i in count" :key="`skeleton-${i}`"
-            class="p-4 border-2 border-amber-100 rounded-lg shadow-lg space-y-3">
-            <!-- Card Header Skeleton (Edit/Delete buttons) -->
-            <div class="flex justify-end items-start mb-3">
-                <div class="flex gap-2">
-                    <div class="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
-                    <div class="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-            </div>
+  <div :class="containerClass">
+    <div v-for="i in count" :key="`skeleton-${i}`"
+      class="bg-white hover:shadow-lg transition-shadow p-4 border-2 border-black rounded-lg shadow-lg flex flex-col h-full">
 
-            <!-- Title Fields Skeleton (h2 tags) -->
-            <div class="mb-4 space-y-2">
-                <div class="h-8 bg-gray-200 rounded animate-pulse" style="width: 80%;"></div>
-            </div>
-
-            <!-- Dynamic Fields Container -->
-            <div class="space-y-3">
-                <!-- Contact Fields Skeleton -->
-                <div class="grid grid-cols-2 gap-4 py-2 border-b border-gray-100">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 bg-blue-200 rounded animate-pulse"></div>
-                        <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 70%;"></div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 bg-green-200 rounded animate-pulse"></div>
-                        <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 60%;"></div>
-                    </div>
-                </div>
-
-                <!-- Number Fields Group Skeleton -->
-                <div class="space-y-3 py-2 border-b border-gray-100">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                            <div class="h-3 bg-gray-200 rounded animate-pulse" style="width: 50%;"></div>
-                            <div class="flex items-center space-x-2">
-                                <div class="w-4 h-4 bg-orange-200 rounded animate-pulse"></div>
-                                <div class="h-3 bg-gray-200 rounded animate-pulse" style="width: 20%;"></div>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                            <div class="h-3 bg-gray-200 rounded animate-pulse" style="width: 45%;"></div>
-                            <div class="flex items-center space-x-2">
-                                <div class="w-4 h-4 bg-orange-200 rounded animate-pulse"></div>
-                                <div class="h-3 bg-gray-200 rounded animate-pulse" style="width: 20%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                        <div class="h-3 bg-gray-200 rounded animate-pulse" style="width: 60%;"></div>
-                        <div class="flex items-center space-x-2">
-                            <div class="w-4 h-4 bg-purple-200 rounded animate-pulse"></div>
-                            <div class="h-3 bg-gray-200 rounded animate-pulse" style="width: 20%;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Skills Section Skeleton -->
-                <div class="space-y-1 py-2 border-b border-gray-100">
-                    <div class="text-sm font-medium text-gray-700 mb-2">
-                        <div class="w-4 h-4 bg-gray-200 rounded animate-pulse inline-block mr-2"></div>
-                        <div class="h-4 bg-gray-200 rounded animate-pulse inline-block" style="width: 30%;"></div>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <div class="px-3 py-1.5 bg-gray-100 rounded-full animate-pulse">
-                            <div class="h-3 bg-gray-200 rounded" style="width: 40px;"></div>
-                        </div>
-                        <div class="px-3 py-1.5 bg-gray-100 rounded-full animate-pulse">
-                            <div class="h-3 bg-gray-200 rounded" style="width: 35px;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Portfolio Link Skeleton -->
-                <div class="space-y-1 py-2 border-b border-gray-100">
-                    <div class="text-sm font-medium text-gray-700 mb-2">
-                        <div class="w-4 h-4 bg-gray-200 rounded animate-pulse inline-block mr-2"></div>
-                        <div class="h-4 bg-gray-200 rounded animate-pulse inline-block" style="width: 50%;"></div>
-                    </div>
-                    <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 80%;"></div>
-                </div>
-
-                <!-- Highest Qualification Skeleton -->
-                <div class="space-y-1 py-2 border-b border-gray-100">
-                    <div class="text-sm font-medium text-gray-700 mb-2">
-                        <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 60%;"></div>
-                    </div>
-                    <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 30%;"></div>
-                </div>
-
-                <!-- Date Skeleton -->
-                <div class="text-xs text-gray-500">
-                    <div class="h-3 bg-gray-200 rounded animate-pulse" style="width: 50%;"></div>
-                </div>
-            </div>
+      <!-- Action Buttons Skeleton -->
+      <div class="flex justify-end items-start mb-3">
+        <div class="flex gap-2">
+          <div class="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+          <div class="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
         </div>
+      </div>
+
+      <!-- Avatar and Title Skeleton -->
+      <div class="mb-4 flex md:flex-row flex-col gap-2">
+        <div class="flex justify-center mb-4">
+          <div class="w-16 h-16 bg-gray-200 rounded-full animate-pulse"></div>
+        </div>
+        <div class="space-y-2">
+          <div class="h-8 bg-gray-200 rounded animate-pulse" style="width: 80%;"></div>
+        </div>
+      </div>
+
+      <!-- Contact Fields Skeleton -->
+      <div class="mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+          <div class="flex items-center justify-start bg-blue-50 rounded-lg p-1 gap-1">
+            <div class="w-4 h-4 bg-blue-200 rounded animate-pulse"></div>
+            <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 60%;"></div>
+          </div>
+          <div class="flex items-center justify-start bg-blue-50 rounded-lg p-1 gap-1">
+            <div class="w-4 h-4 bg-green-200 rounded animate-pulse"></div>
+            <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 70%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Number Fields Skeleton -->
+      <div class="mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="flex flex-col items-center justify-between bg-green-50 rounded-lg p-1 border border-green-200">
+            <div class="h-3 bg-gray-200 rounded animate-pulse" style="width: 50%;"></div>
+            <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 30%;"></div>
+          </div>
+          <div class="flex flex-col items-center justify-between bg-green-50 rounded-lg p-1 border border-green-200">
+            <div class="h-3 bg-gray-200 rounded animate-pulse" style="width: 60%;"></div>
+            <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 40%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Fields Skeleton -->
+      <div class="space-y-3 flex-1">
+        <div v-for="j in 3" :key="`field-${j}`" class="space-y-1 pt-2 border-b border-gray-100 last:border-b-0">
+          <div class="flex items-center space-x-2">
+            <div class="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+            <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 40%;"></div>
+          </div>
+          <div class="h-4 bg-gray-200 rounded animate-pulse" style="width: 70%;"></div>
+        </div>
+      </div>
+
+      <!-- Timestamps Skeleton -->
+      <div class="text-xs text-gray-500 mt-auto pt-2 border-t border-gray-100">
+        <div class="h-3 bg-gray-200 rounded animate-pulse" style="width: 40%;"></div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup>
 defineProps({
-    count: {
-        type: Number,
-        default: 6
-    },
-    containerClass: {
-        type: String,
-        default: ''
-    }
+  count: {
+    type: Number,
+    default: 6
+  },
+  containerClass: {
+    type: String,
+    default: ''
+  }
 })
 </script>

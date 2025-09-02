@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import itemService from '../services/itemService.js'
+import ValidationService from '../services/validationService.js'
 
 export const useItemStore = defineStore('item', () => {
   // State
@@ -132,7 +133,7 @@ export const useItemStore = defineStore('item', () => {
   }
 
   const validateFormData = (data, schema) => {
-    return itemService.validateFormData(data, schema)
+    return ValidationService.validateFormData(data, schema)
   }
 
   const createItem = async (itemData) => {

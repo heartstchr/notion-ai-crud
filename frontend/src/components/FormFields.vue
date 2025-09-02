@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="submitForm" class="space-y-6">
+  <form @submit.prevent="submitForm" class="space-y-6 relative">
     <!-- No Schema Available -->
     <div v-if="!getFormFieldsArray.length" class="text-center py-8 text-gray-500">
       <p>No form fields available.</p>
@@ -8,6 +8,22 @@
 
     <!-- Form Fields -->
     <div v-else class="space-y-6">
+      <!-- Boolean Fields Section -->
+      <div v-if="booleanFields.length > 0" class="absolute top-4 right-4">
+        <div class="space-y-2">
+          <div v-for="field in booleanFields" :key="field.name"
+            class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+            <Checkbox :id="field.name" :model-value="getFieldValue(field.name)"
+              @update:model-value="(value) => updateField(field.name, value)" :binary="true" />
+            <label :for="field.name" class="text-sm text-gray-700 cursor-pointer">
+              {{ field.description || field.label }}
+            </label>
+            <small v-if="formErrors[field.name]" class="text-red-600 text-xs">
+              {{ formErrors[field.name] }}
+            </small>
+          </div>
+        </div>
+      </div>
       <!-- Title Fields Section -->
       <div v-if="titleFields.length > 0" class="space-y-4">
         <div class="grid grid-cols-1 gap-4">
@@ -27,22 +43,7 @@
           </div>
         </div>
       </div>
-      <!-- Boolean Fields Section -->
-      <div v-if="booleanFields.length > 0" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div v-for="field in booleanFields" :key="field.name"
-            class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <Checkbox :id="field.name" :model-value="getFieldValue(field.name)"
-              @update:model-value="(value) => updateField(field.name, value)" :binary="true" />
-            <label :for="field.name" class="text-sm text-gray-700 cursor-pointer flex-1">
-              {{ field.description || field.label }}
-            </label>
-            <small v-if="formErrors[field.name]" class="text-red-600 block w-full">
-              {{ formErrors[field.name] }}
-            </small>
-          </div>
-        </div>
-      </div>
+
 
       <!-- Contact Fields Section -->
       <div v-if="contactFields.length > 0" class="space-y-4">
@@ -182,10 +183,9 @@
                     :class="getOptionClasses(slotProps.value, field)">
                     <span>{{ typeof slotProps.value === 'string' ? slotProps.value : slotProps.value?.label ||
                       slotProps.value?.value || slotProps.value }}</span>
-                    <button type="button" @click="removeMultiselectItem(field.name, slotProps.value || slotProps)"
-                      class="ml-1 hover:opacity-75">
-                      <i class="pi pi-times text-xs"></i>
-                    </button>
+                    <Button type="button" @click="removeMultiselectItem(field.name, slotProps.value || slotProps)"
+                      class="ml-1 hover:opacity-75 p-0 w-6 h-6 !bg-transparent !border-0 !text-red-500 hover:!text-red-700"
+                      :icon="'pi pi-times'" size="small" text rounded />
                   </div>
                 </template>
               </MultiSelect>
@@ -237,9 +237,11 @@
 
     <!-- Form Actions -->
     <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
-      <Button type="button" @click="cancelForm" severity="secondary" label="Cancel" />
+      <Button type="button" @click="cancelForm" severity="secondary" label="Cancel"
+        class="!transition-all !duration-300 hover:!scale-105 hover:!-translate-y-0.5 hover:!shadow-[0_20px_40px_rgba(34,197,94,0.3),0_0_20px_rgba(34,197,94,0.2)]" />
       <Button type="submit" :disabled="submitting" :loading="submitting"
-        :label="submitting ? submittingText : submitButtonText" />
+        :label="submitting ? submittingText : submitButtonText"
+        class="!transition-all !duration-300 hover:!scale-105 hover:!-translate-y-0.5 hover:!shadow-[0_20px_40px_rgba(34,197,94,0.3),0_0_20px_rgba(34,197,94,0.2)]" />
     </div>
   </form>
 </template>

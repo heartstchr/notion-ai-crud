@@ -7,6 +7,7 @@ import {
   getFieldIcon as getDefaultIconFromUtils,
   getDefaultIcon,
 } from '../utils/mappingUtils.js'
+import ValidationService from './validationService.js'
 
 class NotionMiddleware {
   // Transform raw Notion properties to simple key-value pairs
@@ -19,7 +20,8 @@ class NotionMiddleware {
           result[key] = property.title?.map((t) => t.plain_text).join('') || ''
           break
         case 'rich_text':
-          result[key] = property.rich_text?.map((t) => t.plain_text).join('') || ''
+          // Preserve the original rich_text structure for rich formatting
+          result[key] = property.rich_text || []
           break
         case 'email':
           result[key] = property.email || ''
@@ -331,64 +333,12 @@ class NotionMiddleware {
 
   // Validate form data based on schema
   static validateFormData(data, schema) {
-    const errors = {}
-
-    if (!schema || !schema.properties) {
-      return { isValid: true, errors: {} }
-    }
-
-    Object.entries(schema.properties).forEach(([key, property]) => {
-      const value = data[key]
-
-      // Check required fields
-      if (property.required && (!value || value.toString().trim() === '')) {
-        errors[key] = `${this.formatLabel(key)} is required`
-        return
-      }
-
-      // Type-specific validation
-      if (value && value.toString().trim() !== '') {
-        switch (property.type) {
-          case 'email': {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-            if (!emailRegex.test(value)) {
-              errors[key] = 'Please enter a valid email address'
-            }
-            break
-          }
-          case 'url': {
-            try {
-              new URL(value)
-            } catch {
-              if (!value.startsWith('http://') && !value.startsWith('https://')) {
-                errors[key] = 'Please enter a valid URL (include http:// or https://)'
-              }
-            }
-            break
-          }
-          case 'phone_number': {
-            const phoneRegex = /^[+]?[1-9][\d]{0,15}$/
-            if (!phoneRegex.test(value.replace(/[\s\-()]/g, ''))) {
-              errors[key] = 'Please enter a valid phone number'
-            }
-            break
-          }
-        }
-      }
-    })
-
-    return {
-      isValid: Object.keys(errors).length === 0,
-      errors,
-    }
+    return ValidationService.validateFormData(data, schema)
   }
 
   // Format field name to readable label
   static formatLabel(fieldName) {
-    return fieldName
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, (str) => str.toUpperCase())
-      .trim()
+    return ValidationService.formatLabel(fieldName)
   }
 
   // Map Notion property types to HTML form input types

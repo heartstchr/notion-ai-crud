@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import EditView from '../views/EditView.vue'
-import AddView from '../views/AddView.vue'
+
+// Lazy load views for better initial load performance
+const HomeView = () => import('../views/HomeView.vue')
+const EditView = () => import('../views/EditView.vue')
+const AddView = () => import('../views/AddView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

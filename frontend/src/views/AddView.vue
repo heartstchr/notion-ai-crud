@@ -15,9 +15,10 @@
           <p class="text-red-700 mt-1">{{ error }}</p>
         </div>
       </div>
-      <button @click="retryLoad" class="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+      <Button @click="retryLoad" class="mt-4 !px-4 !py-2 !bg-red-600 !text-white !rounded-md hover:!bg-red-700"
+        severity="danger">
         Try Again
-      </button>
+      </Button>
     </div>
 
     <!-- Form -->

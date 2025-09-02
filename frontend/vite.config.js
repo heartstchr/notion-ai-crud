@@ -29,9 +29,17 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks: undefined,
+        manualChunks: {
+          // Vendor chunks for better caching
+          'vendor-vue': ['vue', 'vue-router', 'pinia'],
+          'vendor-primevue': ['primevue', '@primeuix/themes'],
+        },
       },
     },
+    // Enable minification and tree shaking
+    minify: 'esbuild', // Use esbuild (default) instead of terser
+    // Enable source maps for debugging (disable in production)
+    sourcemap: false,
   },
   server: {
     proxy: {

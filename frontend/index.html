@@ -1,10 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="">
   <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notion CRUD</title>
+
+    <!-- Preload critical resources for faster loading -->
+    <link rel="preload" href="/src/main.js" as="script" type="module" />
+
+    <!-- DNS prefetch for external domains -->
+    <link rel="dns-prefetch" href="//api.notion.com" />
+
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://api.notion.com" crossorigin />
+
+    <!-- Meta tags for better performance -->
+    <meta name="description" content="Notion CRUD Application" />
+    <meta name="theme-color" content="#ffffff" />
   </head>
   <body>
     <div id="app"></div>

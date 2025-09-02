@@ -17,6 +17,9 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useItemStore } from '../stores/itemStore.js'
+import HeaderView from '../components/HeaderView.vue'
+import ErrorDisplay from '../components/ErrorDisplay.vue'
+import ListView from '../components/ListView.vue'
 // Store
 const itemStore = useItemStore()
 // Computed properties from store
@@ -69,14 +72,27 @@ const hasMore = ref(false)
 // Methods
 const initialize = async () => {
   try {
-    // First, ensure schema is loaded (this should happen first)
-    await itemStore.ensureSchemaLoaded()
+    // Load schema and items in parallel for faster initial load
+    const [schemaResult, itemsResult] = await Promise.allSettled([
+      itemStore.ensureSchemaLoaded(),
+      itemStore.fetchAllItems()
+    ])
 
-    // Then fetch items (schema will be available for proper field ordering)
-    await itemStore.fetchAllItems()
+    // Handle schema loading result
+    if (schemaResult.status === 'rejected') {
+      console.error('Schema loading failed:', schemaResult.reason)
+    }
 
-    // Update local database info from the store
-    updateDatabaseInfo()
+    // Handle items loading result
+    if (itemsResult.status === 'rejected') {
+      console.error('Items loading failed:', itemsResult.reason)
+    }
+
+    // Ensure both schema and items are loaded before updating UI
+    if (schemaResult.status === 'fulfilled' && itemsResult.status === 'fulfilled') {
+      // Update local database info from the store
+      updateDatabaseInfo()
+    }
   } catch (error) {
     console.error('Failed to initialize:', error)
   }
@@ -97,9 +113,19 @@ const updateDatabaseInfo = () => {
 
 const refreshSchema = async () => {
   try {
-    await itemStore.fetchSchema(true) // Force refresh
-    // Update local database info from the refreshed store data
-    updateDatabaseInfo()
+    // Refresh both schema and items to ensure consistency
+    const [schemaResult, itemsResult] = await Promise.allSettled([
+      itemStore.fetchSchema(true), // Force refresh
+      itemStore.fetchAllItems() // Refresh items as well
+    ])
+
+    // Only update UI if both operations succeed
+    if (schemaResult.status === 'fulfilled' && itemsResult.status === 'fulfilled') {
+      updateDatabaseInfo()
+    } else {
+      console.error('Schema refresh failed:', schemaResult.status === 'rejected' ? schemaResult.reason : 'Unknown error')
+      console.error('Items refresh failed:', itemsResult.status === 'rejected' ? itemsResult.reason : 'Unknown error')
+    }
   } catch (error) {
     console.error('Failed to refresh schema:', error)
   }

@@ -2,8 +2,8 @@ import './assets/main.css'
 import 'primeicons/primeicons.css'
 
 import { createApp } from 'vue'
-import PrimeVue from 'primevue/config'
 import { createPinia } from 'pinia'
+import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
@@ -11,8 +11,14 @@ import ConfirmationService from 'primevue/confirmationservice'
 import App from './App.vue'
 import router from './router'
 
+// Create Vue 3 app with composition API
 const app = createApp(App)
-// PrimeVue configuration
+
+// Use plugins with Vue 3 syntax
+app.use(createPinia())
+app.use(router)
+
+// Configure PrimeVue with Vue 3
 app.use(PrimeVue, {
   theme: {
     preset: Aura,
@@ -20,10 +26,9 @@ app.use(PrimeVue, {
   ripple: true,
 })
 
-// PrimeVue services (these still need to be manually registered)
+// Register PrimeVue services
 app.use(ToastService)
 app.use(ConfirmationService)
 
-app.use(createPinia())
-app.use(router)
+// Mount the app
 app.mount('#app')

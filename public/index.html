@@ -1,12 +1,27 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="">
   <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
-    <script type="module" crossorigin src="/assets/index--PAnW4uo.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CWa2MdnV.css">
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notion CRUD</title>
+
+    <!-- Preload critical resources for faster loading -->
+    <link rel="preload" href="data:text/javascript;base64,aW1wb3J0ICcuL2Fzc2V0cy9tYWluLmNzcycKaW1wb3J0ICdwcmltZWljb25zL3ByaW1laWNvbnMuY3NzJwoKaW1wb3J0IHsgY3JlYXRlQXBwIH0gZnJvbSAndnVlJwppbXBvcnQgeyBjcmVhdGVQaW5pYSB9IGZyb20gJ3BpbmlhJwppbXBvcnQgUHJpbWVWdWUgZnJvbSAncHJpbWV2dWUvY29uZmlnJwppbXBvcnQgQXVyYSBmcm9tICdAcHJpbWV1aXgvdGhlbWVzL2F1cmEnCmltcG9ydCBUb2FzdFNlcnZpY2UgZnJvbSAncHJpbWV2dWUvdG9hc3RzZXJ2aWNlJwppbXBvcnQgQ29uZmlybWF0aW9uU2VydmljZSBmcm9tICdwcmltZXZ1ZS9jb25maXJtYXRpb25zZXJ2aWNlJwoKaW1wb3J0IEFwcCBmcm9tICcuL0FwcC52dWUnCmltcG9ydCByb3V0ZXIgZnJvbSAnLi9yb3V0ZXInCgovLyBDcmVhdGUgVnVlIDMgYXBwIHdpdGggY29tcG9zaXRpb24gQVBJCmNvbnN0IGFwcCA9IGNyZWF0ZUFwcChBcHApCgovLyBVc2UgcGx1Z2lucyB3aXRoIFZ1ZSAzIHN5bnRheAphcHAudXNlKGNyZWF0ZVBpbmlhKCkpCmFwcC51c2Uocm91dGVyKQoKLy8gQ29uZmlndXJlIFByaW1lVnVlIHdpdGggVnVlIDMKYXBwLnVzZShQcmltZVZ1ZSwgewogIHRoZW1lOiB7CiAgICBwcmVzZXQ6IEF1cmEsCiAgfSwKICByaXBwbGU6IHRydWUsCn0pCgovLyBSZWdpc3RlciBQcmltZVZ1ZSBzZXJ2aWNlcwphcHAudXNlKFRvYXN0U2VydmljZSkKYXBwLnVzZShDb25maXJtYXRpb25TZXJ2aWNlKQoKLy8gTW91bnQgdGhlIGFwcAphcHAubW91bnQoJyNhcHAnKQo=" as="script" type="module" />
+
+    <!-- DNS prefetch for external domains -->
+    <link rel="dns-prefetch" href="//api.notion.com" />
+
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://api.notion.com" crossorigin />
+
+    <!-- Meta tags for better performance -->
+    <meta name="description" content="Notion CRUD Application" />
+    <meta name="theme-color" content="#ffffff" />
+    <script type="module" crossorigin src="/assets/index-DpgkslQk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-vue-CPcLwXa2.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-primevue-DIj4JoDf.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CAVa41G-.css">
   </head>
   <body>
     <div id="app"></div>
