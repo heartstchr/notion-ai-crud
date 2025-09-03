@@ -11,10 +11,14 @@ export function useButtonPT(severity = 'primary', size = 'small', isIconOnly = f
         'shadow-lg hover:shadow-xl',
         'focus:outline-none focus:ring-2 focus:ring-offset-2',
         'disabled:opacity-50 disabled:cursor-not-allowed',
+        '!border-0', // Override any default borders
       ],
     },
     icon: {
       class: isIconOnly ? 'm-0' : 'mr-2',
+    },
+    label: {
+      class: 'font-medium',
     },
   }))
 
@@ -33,16 +37,16 @@ function getSizeClasses(size) {
 function getSeverityClasses(severity) {
   const classes = {
     primary:
-      'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 hover:shadow-[0_20px_40px_rgba(37,99,235,0.3),0_0_20px_rgba(37,99,235,0.2)]',
+      '!bg-blue-600 !hover:bg-blue-700 !text-white focus:ring-blue-500 hover:shadow-[0_20px_40px_rgba(37,99,235,0.3),0_0_20px_rgba(37,99,235,0.2)]',
     secondary:
-      'bg-gray-200 hover:bg-gray-300 text-gray-700 hover:text-gray-800 border border-gray-300 focus:ring-gray-500 hover:shadow-[0_20px_40px_rgba(107,114,128,0.3),0_0_20px_rgba(107,114,128,0.2)]',
+      '!bg-gray-200 !hover:bg-gray-300 !text-gray-700 hover:text-gray-800 border border-gray-300 focus:ring-gray-500 hover:shadow-[0_20px_40px_rgba(107,114,128,0.3),0_0_20px_rgba(107,114,128,0.2)]',
     danger:
-      'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 hover:shadow-[0_20px_40px_rgba(239,68,68,0.3),0_0_20px_rgba(239,68,68,0.2)]',
+      '!bg-red-600 !hover:bg-red-700 !text-white focus:ring-red-500 hover:shadow-[0_20px_40px_rgba(239,68,68,0.3),0_0_20px_rgba(239,68,68,0.2)]',
     success:
-      'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 hover:shadow-[0_20px_40px_rgba(34,197,94,0.3),0_0_20px_rgba(34,197,94,0.2)]',
+      '!bg-green-600 !hover:bg-green-700 !text-white focus:ring-green-500 hover:shadow-[0_20px_40px_#22c55e4d,0_0_20px_#22c55e33]',
     warning:
-      'bg-amber-600 hover:bg-amber-700 text-white focus:ring-amber-500 hover:shadow-[0_20px_40px_rgba(217,119,6,0.3),0_0_20px_rgba(217,119,6,0.2)]',
-    info: 'bg-cyan-600 hover:bg-cyan-700 text-white focus:ring-cyan-500 hover:shadow-[0_20px_40px_rgba(6,182,212,0.3),0_0_20px_rgba(6,182,212,0.2)]',
+      '!bg-amber-600 !hover:bg-amber-700 !text-white focus:ring-amber-500 hover:shadow-[0_20px_40px_rgba(217,119,6,0.3),0_0_20px_rgba(217,119,6,0.2)]',
+    info: '!bg-cyan-600 !hover:bg-cyan-700 !text-white focus:ring-cyan-500 hover:shadow-[0_20px_40px_rgba(6,182,212,0.3),0_0_20px_rgba(6,182,212,0.2)]',
   }
   return classes[severity] || classes.primary
 }

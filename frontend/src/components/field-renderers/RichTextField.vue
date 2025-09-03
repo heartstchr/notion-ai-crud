@@ -12,7 +12,7 @@ import { computed } from 'vue'
 
 const props = defineProps({
   value: {
-    type: Object,
+    type: [Object, String],
     required: true
   }
 })

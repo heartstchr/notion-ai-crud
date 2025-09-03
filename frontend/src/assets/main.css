@@ -8,30 +8,75 @@
   }
 }
 
-/* Light theme enforcement - minimal CSS for theme consistency */
-:root {
-  color-scheme: light;
-}
-
-html {
-  color-scheme: light;
-}
-
+/* Light theme base styles */
 body {
-  color-scheme: light;
   background-color: #f9fafb;
   color: #000000;
 }
 
-/* Override any potential dark mode classes */
-[data-pc-theme='dark'],
-[data-theme='dark'],
-.dark,
-.dark-mode {
-  color-scheme: light !important;
-  background-color: #f9fafb !important;
-  color: #000000 !important;
+/* CSS Variables for consistent theming */
+:root {
+  --input-bg: #f3f4f6;
+  --input-text: #000000;
+  --input-border: #d1d5db;
+  --input-focus-border: #3b82f6;
+  --input-focus-ring: #3b82f6;
+  --panel-bg: #f3f4f6;
+  --panel-border: #d1d5db;
+  --item-bg: #ffffff;
+  --item-hover-bg: #e5e7eb;
+  --button-primary-bg: #3b82f6;
+  --button-primary-hover: #2563eb;
+  --button-primary-text: #ffffff;
 }
 
-/* PrimeVue theme configuration is handled through PassThrough API in main.js */
-/* No custom CSS overrides needed - all styling is managed by PrimeVue configuration */
+/* PrimeVue component overrides using CSS variables */
+.p-inputtext,
+.p-dropdown,
+.p-multiselect,
+.p-calendar,
+.p-inputnumber,
+.p-textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--input-border) !important;
+}
+
+.p-inputtext:focus,
+.p-dropdown:focus,
+.p-multiselect:focus,
+.p-calendar:focus,
+.p-inputnumber:focus,
+.p-textarea:focus {
+  border-color: var(--input-focus-border) !important;
+  box-shadow: 0 0 0 1px var(--input-focus-ring) !important;
+}
+
+.p-dropdown-panel,
+.p-multiselect-panel,
+.p-calendar-panel {
+  background-color: var(--panel-bg) !important;
+  border-color: var(--panel-border) !important;
+}
+
+.p-dropdown-item,
+.p-multiselect-item {
+  background-color: var(--item-bg) !important;
+  color: var(--input-text) !important;
+}
+
+.p-dropdown-item:hover,
+.p-multiselect-item:hover {
+  background-color: var(--item-hover-bg) !important;
+}
+
+.p-button.p-button-primary {
+  background-color: var(--button-primary-bg) !important;
+  border-color: var(--button-primary-bg) !important;
+  color: var(--button-primary-text) !important;
+}
+
+.p-button.p-button-primary:hover {
+  background-color: var(--button-primary-hover) !important;
+  border-color: var(--button-primary-hover) !important;
+}

@@ -5,7 +5,7 @@
     <!-- Action Buttons -->
     <div class="flex justify-end items-start mb-3">
       <div class="flex gap-2">
-        <IconButton icon="pi pi-pencil" severity="primary" @click="editItem" />
+        <IconButton icon="pi pi-pencil" severity="success" @click="editItem" />
         <IconButton icon="pi pi-trash" severity="danger" @click="deleteItem" />
       </div>
     </div>
@@ -17,9 +17,9 @@
         <Avatar :label="getAvatarLabel()" :image="getAvatarImage()" size="xlarge" shape="circle"
           class="border-2 border-gray-200 shadow-md bg-gray-100 p-2" />
       </div>
-      <div v-for="[key, value] in titleFields" :key="key" class="flex flex-col justify-start gap-3 mb-2 ml-4">
+      <div v-for="[key, value] in titleFields" :key="key" class="flex flex-col justify-start gap-2 mb-2 ml-4">
         <h2 class="text-2xl font-bold text-gray-900">{{ value }}</h2>
-        <div v-if="booleanFields.length > 0" class="mb-4 ml-4">
+        <div v-if="booleanFields.length > 0" class="mb-2">
           <div class="flex flex-wrap gap-2">
             <BooleanField v-for="[key, value] in booleanFields" :key="key" :value="value" :field-name="key"
               :format-label="formatLabel" />
@@ -306,6 +306,8 @@ const deleteItem = () => {
     }
   })
 }
+
+
 
 const formatLabel = (text) => {
   return NotionMiddleware.formatLabel(text)

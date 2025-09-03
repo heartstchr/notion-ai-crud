@@ -8,7 +8,7 @@
       <!-- Item Grid or Empty State -->
       <div v-if="schema" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Data Cards -->
-        <CardView v-for="item in items" :key="item.id" :item="item" :schema="schema" @delete-item="deleteItem" />
+        <CardView v-for="item in items" :key="item.id" :item="item" :schema="schema" @deleteItem="handleDeleteItem" />
 
         <!-- Empty State (shown when no items and not loading) -->
         <EmptyState v-if="!loading && items.length === 0" @add-item="goToAdd" />
@@ -56,9 +56,13 @@ defineProps({
   }
 })
 
-defineEmits(['deleteItem', 'loadMore'])
+const emit = defineEmits(['deleteItem', 'loadMore'])
 
 const goToAdd = () => {
   router.push('/add')
+}
+
+const handleDeleteItem = (id) => {
+  emit('deleteItem', id)
 }
 </script>

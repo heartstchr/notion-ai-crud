@@ -171,14 +171,19 @@ class ItemService {
 
   // Delete item
   async deleteItem(id) {
-    const response = await this.apiRequest(`/notion-crud?id=${id}`, {
-      method: 'DELETE',
-    })
+    try {
+      const response = await this.apiRequest(`/notion-crud?id=${id}`, {
+        method: 'DELETE',
+      })
 
-    this.clearCacheByPattern('all_items_')
-    this.cache.delete(`item_${id}`)
+      this.clearCacheByPattern('all_items_')
+      this.cache.delete(`item_${id}`)
 
-    return response
+      return response
+    } catch (error) {
+      console.error('Error deleting item:', error)
+      throw error
+    }
   }
 
   // Utility method to generate form fields from schema

@@ -201,6 +201,7 @@ export const useItemStore = defineStore('item', () => {
       error.value = null
 
       const response = await itemService.deleteItem(id)
+
       if (response.success) {
         // Remove the item from the list
         items.value = items.value.filter((item) => item.id !== id)
