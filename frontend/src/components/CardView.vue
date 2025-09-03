@@ -5,9 +5,8 @@
     <!-- Action Buttons -->
     <div class="flex justify-end items-start mb-3">
       <div class="flex gap-2">
-        <Button @click="editItem" severity="primary" :icon="'pi pi-pencil'" size="small" />
-        <Button @click="deleteItem" severity="danger" :icon="'pi pi-trash'" size="small"
-          class="!w-10 !h-10 !p-0 !min-w-0 !min-h-0" />
+        <IconButton icon="pi pi-pencil" severity="primary" @click="editItem" />
+        <IconButton icon="pi pi-trash" severity="danger" @click="deleteItem" />
       </div>
     </div>
 
@@ -134,6 +133,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
+
 import {
   formatNumberBySchema,
   getCurrencySymbol,
@@ -153,6 +153,7 @@ import SelectField from './field-renderers/SelectField.vue'
 import BooleanField from './field-renderers/BooleanField.vue'
 import TextField from './field-renderers/TextField.vue'
 import Avatar from 'primevue/avatar'
+import IconButton from './IconButton.vue'
 
 // Composables
 const router = useRouter()
@@ -184,6 +185,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['deleteItem'])
+
+
 
 // Memoized field processing for better performance
 const processedFields = computed(() => {

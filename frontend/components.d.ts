@@ -20,6 +20,7 @@ declare module 'vue' {
     ErrorDisplay: typeof import('./src/components/ErrorDisplay.vue')['default']
     FormFields: typeof import('./src/components/FormFields.vue')['default']
     HeaderView: typeof import('./src/components/HeaderView.vue')['default']
+    IconButton: typeof import('./src/components/IconButton.vue')['default']
     InputNumber: typeof import('primevue/inputnumber')['default']
     InputText: typeof import('primevue/inputtext')['default']
     ListView: typeof import('./src/components/ListView.vue')['default']
