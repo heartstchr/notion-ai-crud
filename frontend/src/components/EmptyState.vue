@@ -7,8 +7,7 @@
       <h3 class="text-2xl font-semibold text-gray-900 mb-2">No items yet</h3>
       <p class="text-gray-600 mb-6 text-center max-w-md">Start building your collection by adding your first item
         to get started.</p>
-      <Button @click="$emit('add-item')"
-        class="!px-6 !py-3 !bg-blue-600 !text-white !rounded-lg hover:!bg-blue-700 !transition-colors !font-medium !shadow-sm">
+      <Button @click="$emit('add-item')" severity="primary">
         <i class="pi pi-plus mr-2"></i>Add First Item
       </Button>
     </div>

@@ -2,9 +2,7 @@
   <div class="mb-8">
     <!-- Back Button (only shown in edit mode) -->
     <div v-if="showBackButton" class="flex items-center gap-4 mb-4">
-      <Button @click="$emit('goBack')"
-        class="!p-0 !bg-transparent !border-0 flex items-center gap-2 text-gray-600 hover:text-gray-800" text
-        severity="secondary">
+      <Button @click="$emit('goBack')" severity="secondary" text>
         <i class="pi pi-arrow-left"></i>
         Back
       </Button>

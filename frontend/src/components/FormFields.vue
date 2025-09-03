@@ -184,8 +184,8 @@
                     <span>{{ typeof slotProps.value === 'string' ? slotProps.value : slotProps.value?.label ||
                       slotProps.value?.value || slotProps.value }}</span>
                     <Button type="button" @click="removeMultiselectItem(field.name, slotProps.value || slotProps)"
-                      class="ml-1 hover:opacity-75 p-0 w-6 h-6 !bg-transparent !border-0 !text-red-500 hover:!text-red-700"
-                      :icon="'pi pi-times'" size="small" text rounded />
+                      class="ml-1 hover:opacity-75 p-0 w-6 h-6 text-gray-700 hover:text-gray-900" :icon="'pi pi-times'"
+                      size="small" link rounded />
                   </div>
                 </template>
               </MultiSelect>
@@ -215,9 +215,9 @@
               @update:model-value="(value) => updateField(field.name, value)"
               :class="{ 'p-invalid': formErrors[field.name] }" class="w-full" dateFormat="yy-mm-dd" />
 
-            <!-- Textarea -->
-            <Textarea v-else-if="field.type === 'textarea'" :id="field.name" :placeholder="field.placeholder"
-              :required="field.required" :model-value="getFieldValue(field.name)"
+            <!-- Rich Text / Textarea -->
+            <Textarea v-else-if="field.type === 'rich_text' || field.type === 'textarea'" :id="field.name"
+              :placeholder="field.placeholder" :required="field.required" :model-value="getFieldValue(field.name)"
               @update:model-value="(value) => updateField(field.name, value)"
               :class="{ 'p-invalid': formErrors[field.name] }" class="w-full" rows="3" />
 
@@ -237,11 +237,9 @@
 
     <!-- Form Actions -->
     <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
-      <Button type="button" @click="cancelForm" severity="secondary" label="Cancel"
-        class="!transition-all !duration-300 hover:!scale-105 hover:!-translate-y-0.5 hover:!shadow-[0_20px_40px_rgba(34,197,94,0.3),0_0_20px_rgba(34,197,94,0.2)]" />
+      <Button type="button" @click="cancelForm" label="Cancel" severity="secondary" />
       <Button type="submit" :disabled="submitting" :loading="submitting"
-        :label="submitting ? submittingText : submitButtonText"
-        class="!transition-all !duration-300 hover:!scale-105 hover:!-translate-y-0.5 hover:!shadow-[0_20px_40px_rgba(34,197,94,0.3),0_0_20px_rgba(34,197,94,0.2)]" />
+        :label="submitting ? submittingText : submitButtonText" severity="primary" />
     </div>
   </form>
 </template>
@@ -251,6 +249,7 @@ import { computed } from 'vue'
 import {
   getColorIndicator,
   getOptionClasses,
+  getOptionBackgroundClasses,
   getSelectedOptionClasses,
   getSelectedOptionLabel,
   getDefaultIcon,
@@ -443,10 +442,7 @@ const removeMultiselectItem = (fieldName, itemToRemove) => {
   updateMultiselectField(fieldName, updatedValue)
 }
 
-const getOptionBackgroundClasses = () => {
-  // Always use white background for dropdown options
-  return 'bg-white text-gray-800 hover:bg-gray-50'
-}
+
 
 const submitForm = () => {
   emit('submitForm')

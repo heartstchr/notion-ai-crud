@@ -151,12 +151,12 @@ const retryLoad = async () => {
 }
 
 const deleteItem = async (id) => {
-  if (confirm('Are you sure you want to delete this item?')) {
-    try {
-      await itemStore.deleteItem(id)
-    } catch (error) {
-      console.error('Failed to delete item:', error)
-    }
+  try {
+    await itemStore.deleteItem(id)
+    // Refresh the items list after successful deletion
+    await itemStore.fetchAllItems()
+  } catch (error) {
+    console.error('Failed to delete item:', error)
   }
 }
 

@@ -20,8 +20,8 @@ class NotionMiddleware {
           result[key] = property.title?.map((t) => t.plain_text).join('') || ''
           break
         case 'rich_text':
-          // Preserve the original rich_text structure for rich formatting
-          result[key] = property.rich_text || []
+          // Convert rich_text to plain text for display
+          result[key] = property.rich_text?.map((t) => t.plain_text).join('') || ''
           break
         case 'email':
           result[key] = property.email || ''

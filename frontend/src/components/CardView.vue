@@ -5,12 +5,9 @@
     <!-- Action Buttons -->
     <div class="flex justify-end items-start mb-3">
       <div class="flex gap-2">
-        <Button @click="editItem"
-          class="w-10 h-10 !p-0 !bg-transparent !border-0 text-gray-600 hover:text-blue-600 hover:bg-blue-50 !transition-all !duration-300 hover:!scale-105 hover:!-translate-y-0.5 hover:!shadow-[0_20px_40px_rgba(34,197,94,0.3),0_0_20px_rgba(34,197,94,0.2)]"
-          :icon="'pi pi-pencil'" text rounded size="small" />
-        <Button @click="deleteItem"
-          class="w-10 h-10 !p-0 !bg-transparent !border-0 text-red-600 hover:bg-red-50 !transition-all !duration-300 hover:!scale-105 hover:!-translate-y-0.5 hover:!shadow-[0_20px_40px_rgba(34,197,94,0.3),0_0_20px_rgba(34,197,94,0.2)]"
-          :icon="'pi pi-times'" text rounded size="small" />
+        <Button @click="editItem" severity="primary" :icon="'pi pi-pencil'" size="small" />
+        <Button @click="deleteItem" severity="danger" :icon="'pi pi-trash'" size="small"
+          class="!w-10 !h-10 !p-0 !min-w-0 !min-h-0" />
       </div>
     </div>
 
@@ -20,18 +17,17 @@
       <div class="flex justify-center mb-4">
         <Avatar :label="getAvatarLabel()" :image="getAvatarImage()" size="xlarge" shape="circle"
           class="border-2 border-gray-200 shadow-md bg-gray-100 p-2" />
-        <div v-if="booleanFields.length > 0" class="mb-4 -ml-4">
+      </div>
+      <div v-for="[key, value] in titleFields" :key="key" class="flex flex-col justify-start gap-3 mb-2 ml-4">
+        <h2 class="text-2xl font-bold text-gray-900">{{ value }}</h2>
+        <div v-if="booleanFields.length > 0" class="mb-4 ml-4">
           <div class="flex flex-wrap gap-2">
             <BooleanField v-for="[key, value] in booleanFields" :key="key" :value="value" :field-name="key"
               :format-label="formatLabel" />
           </div>
         </div>
       </div>
-      <div v-for="[key, value] in titleFields" :key="key" class="flex items-center gap-3 mb-2 ml-4">
-        <h2 class="text-2xl font-bold text-gray-900">{{ value }}</h2>
-      </div>
     </div>
-
 
     <!-- Contact fields section -->
     <div v-if="contactFields.length > 0" class="mb-4">
@@ -137,6 +133,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useConfirm } from 'primevue/useconfirm'
 import {
   formatNumberBySchema,
   getCurrencySymbol,
@@ -159,6 +156,7 @@ import Avatar from 'primevue/avatar'
 
 // Composables
 const router = useRouter()
+const confirm = useConfirm()
 
 
 
@@ -288,7 +286,22 @@ const editItem = () => {
 
 const deleteItem = () => {
   const itemId = props.item[props.itemIdField]
-  emit('deleteItem', itemId)
+
+  // Get item title for confirmation message
+  const itemTitle = titleFields.value.length > 0 ? titleFields.value[0][1] : 'this item'
+
+  confirm.require({
+    message: `Are you sure you want to delete "${itemTitle}"?`,
+    header: 'Confirm Deletion',
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      emit('deleteItem', itemId)
+    },
+    reject: () => {
+      // User cancelled deletion
+    }
+  })
 }
 
 const formatLabel = (text) => {

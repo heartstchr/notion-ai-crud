@@ -8,104 +8,30 @@
   }
 }
 
-/* PrimeVue Form Field Theme Customization */
-/* Input styling - grey background with black text */
-.p-inputtext,
-.p-inputnumber-input,
-.p-calendar-input,
-.p-dropdown,
-.p-multiselect,
-.p-inputtextarea,
-.p-multiselect-label-container,
-.p-multiselect-label,
-.p-multiselect-token,
-.p-multiselect-token-label {
-  background-color: #f3f4f6 !important;
-  color: #000000 !important;
-  border-color: #d1d5db !important;
+/* Light theme enforcement - minimal CSS for theme consistency */
+:root {
+  color-scheme: light;
 }
 
-.p-inputtext:focus,
-.p-inputnumber-input:focus,
-.p-calendar-input:focus,
-.p-dropdown:focus,
-.p-multiselect:focus,
-.p-inputtextarea:focus {
-  background-color: #f3f4f6 !important;
-  color: #000000 !important;
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 1px #3b82f6 !important;
+html {
+  color-scheme: light;
 }
 
-/* Additional multiselect styling */
-.p-multiselect-label-container {
-  background-color: #f3f4f6 !important;
+body {
+  color-scheme: light;
+  background-color: #f9fafb;
+  color: #000000;
 }
 
-.p-multiselect-label {
+/* Override any potential dark mode classes */
+[data-pc-theme='dark'],
+[data-theme='dark'],
+.dark,
+.dark-mode {
+  color-scheme: light !important;
+  background-color: #f9fafb !important;
   color: #000000 !important;
 }
 
-.p-multiselect-token {
-  border-radius: 9999px !important;
-  padding: 0.25rem 0.75rem !important;
-  font-size: 0.875rem !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.5rem !important;
-}
-
-.p-multiselect-token-label {
-  font-weight: 500 !important;
-}
-
-.p-multiselect-token-icon {
-  cursor: pointer !important;
-}
-
-/* Placeholder text styling */
-.p-inputtext::placeholder,
-.p-inputnumber-input::placeholder,
-.p-calendar-input::placeholder,
-.p-inputtextarea::placeholder {
-  color: #9ca3af !important;
-}
-
-/* Dropdown and multiselect options */
-.p-dropdown-panel,
-.p-multiselect-panel {
-  background-color: #f3f4f6 !important;
-  border-color: #d1d5db !important;
-}
-
-.p-dropdown-item,
-.p-multiselect-item {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-}
-
-.p-dropdown-item:hover,
-.p-multiselect-item:hover {
-  background-color: #e5e7eb !important;
-  color: #000000 !important;
-}
-
-/* Calendar popup */
-.p-datepicker {
-  background-color: #f3f4f6 !important;
-  border-color: #d1d5db !important;
-}
-
-.p-datepicker-header {
-  background-color: #e5e7eb !important;
-}
-
-.p-datepicker-calendar th,
-.p-datepicker-calendar td {
-  color: #000000 !important;
-}
-
-.p-datepicker-calendar td:hover {
-  background-color: #e5e7eb !important;
-  color: #000000 !important;
-}
+/* PrimeVue theme configuration is handled through PassThrough API in main.js */
+/* No custom CSS overrides needed - all styling is managed by PrimeVue configuration */

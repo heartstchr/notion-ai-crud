@@ -644,6 +644,29 @@ export const getColorIndicator = (color) => {
   return notionColorToIndicatorMap[color] || 'bg-blue-500'
 }
 
+// Get option background classes for dropdown items
+export const getOptionBackgroundClasses = (option) => {
+  if (!option || !option.color) {
+    return 'bg-gray-50 text-black'
+  }
+
+  // Map Notion colors to background classes for dropdown items
+  const colorMap = {
+    default: 'bg-gray-50 text-black',
+    gray: 'bg-gray-100 text-black',
+    brown: 'bg-amber-50 text-amber-900',
+    orange: 'bg-orange-50 text-orange-900',
+    yellow: 'bg-yellow-50 text-yellow-900',
+    green: 'bg-green-50 text-green-900',
+    blue: 'bg-blue-50 text-blue-900',
+    purple: 'bg-purple-50 text-purple-900',
+    pink: 'bg-pink-50 text-pink-900',
+    red: 'bg-red-50 text-red-900',
+  }
+
+  return colorMap[option.color] || 'bg-gray-50 text-black'
+}
+
 // Get option chip classes based on color
 export const getOptionClasses = (option, field, schema = null) => {
   // Safety check: ensure option is valid

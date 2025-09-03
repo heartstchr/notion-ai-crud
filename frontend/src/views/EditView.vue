@@ -11,9 +11,7 @@
           <div class="flex-1">
             <strong class="text-red-800">Error:</strong>
             <span class="text-red-700">{{ error }}</span>
-            <Button @click="retryLoad"
-              class="ml-2 !p-0 !bg-transparent !border-0 text-red-600 hover:text-red-800 underline !transition-colors"
-              text severity="danger">
+            <Button @click="retryLoad" severity="danger" text>
               Try Again
             </Button>
           </div>
