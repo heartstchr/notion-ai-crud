@@ -45,6 +45,7 @@ class ItemService {
 
     if (response.success && response.database) {
       const extractedInfo = NotionMiddleware.extractDatabaseInfo(response.database)
+      console.log('extractedInfo', extractedInfo)
       return extractedInfo
     }
 

@@ -209,7 +209,7 @@ const processedFields = computed(() => {
   Object.entries(schemaProps).forEach(([key, property]) => {
     const value = itemData[key]
 
-    if (!value && property.type !== 'checkbox') return // Skip empty values except checkboxes
+    if (!value && property.type !== 'checkbox' && property.type !== 'select' && property.type !== 'multi_select') return // Skip empty values except checkboxes and select fields
 
     switch (property.type) {
       case 'title':
@@ -227,6 +227,10 @@ const processedFields = computed(() => {
         break
       case 'url':
         result.urlFields.push([key, value])
+        break
+      case 'select':
+      case 'multi_select':
+        result.otherFields.push([key, property])
         break
       default: {
         // Check if it's a contact-related field

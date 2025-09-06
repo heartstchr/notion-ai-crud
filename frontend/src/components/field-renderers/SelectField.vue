@@ -32,6 +32,20 @@ const field = computed(() => ({
 }))
 
 const selectOptions = computed(() => {
+  // Handle flattened data structure (from NotionMiddleware.flattenProperties)
+  if (typeof props.value === 'string' && props.value.trim()) {
+    // Single select field - just a string value
+    return [{ value: props.value, label: props.value, name: props.value }]
+  } else if (Array.isArray(props.value) && props.value.length > 0) {
+    // Multi-select field - array of strings
+    return props.value.map(item => ({
+      value: item,
+      label: item,
+      name: item
+    }))
+  }
+
+  // Fallback to original logic for full Notion structure
   return getSelectOptionsWithColors(props.value)
 })
 
