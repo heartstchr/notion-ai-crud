@@ -50,12 +50,12 @@
         <div v-for="[key, value] in currencyNumberFields" :key="key"
           class="flex flex-col items-center justify-between bg-green-50 rounded-lg p-1 border border-green-200">
           <div class="flex items-center space-x-1">
-            <span class="text-sm font-medium text-gray-700 truncate max-w-24" :title="formatLabel(key)">{{
-              formatLabel(key) }}</span>
+            <span class="text-sm font-medium text-gray-700 truncate max-w-24" :title="memoizedFormatLabel(key)">{{
+              memoizedFormatLabel(key) }}</span>
           </div>
           <div class="flex items-center space-x-1">
             <span class="text-gray-800 font-mono font-medium">
-              {{ formatNumber(value || 0, key) }}
+              {{ memoizedFormatNumber(value || 0, key) }}
             </span>
           </div>
         </div>
@@ -70,11 +70,11 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
               <i :class="getNumberFieldIcon(key, getSchemaProperty(key))" class="text-blue-500"></i>
-              <span class="text-sm font-medium text-gray-700" :title="formatLabel(key)">{{
-                formatLabel(key) }}</span>
+              <span class="text-sm font-medium text-gray-700" :title="memoizedFormatLabel(key)">{{
+                memoizedFormatLabel(key) }}</span>
             </div>
             <span class="text-gray-800 font-mono font-medium text-lg">
-              {{ formatNumber(value || 0, key) }}
+              {{ memoizedFormatNumber(value || 0, key) }}
             </span>
           </div>
         </div>
@@ -88,8 +88,8 @@
           class="flex-col items-center justify-between bg-purple-50 rounded-lg p-3 border border-purple-200">
           <div class="flex items-center space-x-2">
             <i class="pi pi-link text-purple-600"></i>
-            <span class="text-sm font-medium text-gray-700" :title="formatLabel(key)">{{
-              formatLabel(key) }}</span>
+            <span class="text-sm font-medium text-gray-700" :title="memoizedFormatLabel(key)">{{
+              memoizedFormatLabel(key) }}</span>
           </div>
           <div class="flex items-center space-x-2">
             <a :href="value" target="_blank" rel="noopener noreferrer"
@@ -108,13 +108,11 @@
         <div v-if="shouldShowLabel(key)" class="text-sm font-medium text-gray-700 mb-2">
           <span v-if="property?.emoji" class="mr-2 text-base">{{ property.emoji }}</span>
           <i v-else-if="property?.icon" :class="property.icon" class="mr-2 text-gray-500"></i>
-          <span class="truncate max-w-32" :title="formatLabel(key)">{{ formatLabel(key) }}</span>
+          <span class="truncate max-w-32" :title="memoizedFormatLabel(key)">{{ memoizedFormatLabel(key) }}</span>
         </div>
 
         <!-- Field content -->
-        <component :is="getFieldRenderer(key)" :value="item[key]" :field-name="key" :schema="schema"
-          :format-label="formatLabel" :format-number="formatNumber" :get-schema-property="getSchemaProperty"
-          :get-field-currency-symbol="getFieldCurrencySymbol" />
+        <component :is="getFieldRenderer(key)" :value="item[key]" :field-name="key" :schema="schema" />
       </div>
     </div>
 
@@ -136,7 +134,6 @@ import { useConfirm } from 'primevue/useconfirm'
 
 import {
   formatNumberBySchema,
-  getCurrencySymbol,
   getNumberFieldIcon
 } from '../utils/mappingUtils.js'
 import NotionMiddleware from '../services/notionMiddleware.js'
@@ -252,7 +249,7 @@ const processedFields = computed(() => {
   return result
 })
 
-// Destructure computed results for cleaner template usage
+// Destructure computed results for cleaner template usage - use direct access for better performance
 const titleFields = computed(() => processedFields.value.titleFields)
 const contactFields = computed(() => processedFields.value.contactFields)
 const booleanFields = computed(() => processedFields.value.booleanFields)
@@ -261,28 +258,50 @@ const regularNumberFields = computed(() => processedFields.value.regularNumberFi
 const urlFields = computed(() => processedFields.value.urlFields)
 const processedFieldsForRender = computed(() => processedFields.value.otherFields)
 
+// Memoized field renderer map for better performance
+const fieldRendererMap = computed(() => {
+  if (!props.schema?.properties) return {}
+
+  const map = {}
+  Object.entries(props.schema.properties).forEach(([key, property]) => {
+    switch (property.type) {
+      case 'rich_text': map[key] = RichTextField; break
+      case 'url': map[key] = UrlField; break
+      case 'date': map[key] = DateField; break
+      case 'select':
+      case 'multi_select': map[key] = SelectField; break
+      case 'checkbox': map[key] = BooleanField; break
+      default: map[key] = TextField
+    }
+  })
+  return map
+})
+
 // Simplified field renderer selection based on schema type
 const getFieldRenderer = (key) => {
   if (key === 'contact') return ContactField
   if (key === 'numbers') return NumbersField
-
-  // Use schema type directly instead of complex detection
-  const property = props.schema?.properties?.[key]
-  if (!property) return TextField
-
-  switch (property.type) {
-    case 'rich_text': return RichTextField
-    case 'url': return UrlField
-    case 'date': return DateField
-    case 'select':
-    case 'multi_select': return SelectField
-    case 'checkbox': return BooleanField
-    default: return TextField
-  }
+  return fieldRendererMap.value[key] || TextField
 }
 
 const shouldShowLabel = (key) => {
   return key !== 'contact' && key !== 'numbers'
+}
+
+// Memoized formatting functions for better performance
+const memoizedFormatLabel = (text) => {
+  return NotionMiddleware.formatLabel(text)
+}
+
+const memoizedFormatNumber = (number, fieldName = null) => {
+  if (typeof number !== 'number') return number
+
+  const property = fieldName ? getSchemaProperty(fieldName) : null
+  if (property) {
+    return formatNumberBySchema(number, property)
+  }
+
+  return number.toLocaleString()
 }
 
 // Methods
@@ -311,11 +330,6 @@ const deleteItem = () => {
   })
 }
 
-
-
-const formatLabel = (text) => {
-  return NotionMiddleware.formatLabel(text)
-}
 
 const formatDate = (dateString) => {
   if (!dateString) return ''
@@ -354,41 +368,9 @@ const getContactFieldIcon = (fieldName, property) => {
   return 'pi pi-user text-gray-500'
 }
 
-const getFieldCurrencySymbol = (fieldName) => {
-  const property = getSchemaProperty(fieldName)
-  if (!property || property.type !== 'number' || !property.number?.format) {
-    return null
-  }
-
-  const symbol = getCurrencySymbol(property.number.format)
-  if (symbol) return symbol
-
-  // Fallback symbols
-  const fallbackSymbols = {
-    'dollar': '$',
-    'euro': '€',
-    'pound': '£',
-    'yen': '¥',
-    'rupee': '₹',
-    'yuan': '¥',
-    'percent': '%'
-  }
-
-  return fallbackSymbols[property.number.format] || property.number.format.toUpperCase()
-}
 
 
 
-const formatNumber = (number, fieldName = null) => {
-  if (typeof number !== 'number') return number
-
-  const property = fieldName ? getSchemaProperty(fieldName) : null
-  if (property) {
-    return formatNumberBySchema(number, property)
-  }
-
-  return number.toLocaleString()
-}
 
 // Avatar helper methods
 const getAvatarLabel = () => {
