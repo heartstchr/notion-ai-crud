@@ -1,0 +1,20 @@
+Can you scan the entire project and complete my script meant for giving a detailed demo of this project explaing the CURD applition using notion DB with respect to features, workflows and how to use it in detail with laypeople lense.
+Use story telling structure `but` and `therfore`. Refer screen shot for  exact column name in notion db.
+I am giving you how I started. Avoid numbering and bullet list. Keep everything in paragraph style:
+
+Hey everyone, Welcome to Stack Lab, 
+This is Jiwan, Today I'll be giving you a demo of an  awesome CRDU application and how i leverage notion db schema available for free built using notion api,  notion db as database. This will transform how you use notion.
+
+The application is  complete CRUD application based on the schema generated in notion db for free. Hit like button once you download and make it your own. Stay til the end i will explain how can you make this your onw.
+Before we start, please subscribe to my channel. That support helps me keep publishing free projects like this one.
+
+Explain button to click to add, read , update, delete. Explain the ui frendly a bit.
+I can change the schema and it will be reflected in the application. Also i can change the filed name by changing the columnname in db. Also it supports curency when you choose number type. Also all other inbuild schema in notion except file upload. without any next time deployment.
+How i am using it talent pool domain in US, how You can cahnge the schema name and you can use it for your country, and language.
+Also if you add private in bracket then it will mask the filed data. and during edit you have to re enter to validate. and how they can  make this application there own.
+
+Explain the benifits of using this for bussines.
+
+
+
+
