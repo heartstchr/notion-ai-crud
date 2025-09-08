@@ -1,134 +1,142 @@
 <template>
   <!-- Item Card -->
   <div v-if="item && Object.keys(item).length > 0"
-    class="bg-white hover:shadow-lg text-gray-900 transition-shadow p-4 border-2 border-black rounded-lg shadow-lg flex flex-col h-full">
-    <!-- Action Buttons -->
-    <div class="flex justify-end items-start mb-3">
-      <div class="flex gap-2">
-        <IconButton icon="pi pi-pencil" severity="success" @click="editItem" />
-        <IconButton icon="pi pi-trash" severity="danger" @click="deleteItem" />
-      </div>
+    class="bg-white hover:shadow-lg text-gray-900 transition-shadow p-4 rounded-lg shadow-lg flex flex-col h-full relative">
+    <!-- Gradient Border with Drop Shadow -->
+    <div
+      class="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg p-0.5 shadow-lg"
+      style="filter: drop-shadow(0 10px 25px rgba(0, 144, 247, 0.3)) drop-shadow(0 4px 6px rgba(186, 98, 252, 0.2)) drop-shadow(0 1px 3px rgba(242, 65, 107, 0.2)) drop-shadow(0 0 0 rgba(245, 86, 0, 0.1));">
+      <div class="bg-white rounded-lg h-full w-full"></div>
     </div>
-
-    <!-- Title fields at the top -->
-    <div v-if="titleFields.length > 0" class="mb-4 flex md:flex-row flex-col gap-2">
-      <!-- Avatar Section -->
-      <div class="flex justify-center mb-4">
-        <Avatar :label="getAvatarLabel()" :image="getAvatarImage()" size="xlarge" shape="circle"
-          class="border-2 border-gray-200 shadow-md bg-gray-100 p-2" />
+    <div class="relative z-10">
+      <!-- Action Buttons -->
+      <div class="flex justify-end items-start mb-3">
+        <div class="flex gap-2">
+          <IconButton icon="pi pi-pencil" severity="success" @click="editItem" />
+          <IconButton icon="pi pi-trash" severity="danger" @click="deleteItem" />
+        </div>
       </div>
-      <div v-for="[key, value] in titleFields" :key="key" class="flex flex-col justify-start gap-2 mb-2 ml-4">
-        <h2 class="text-2xl font-bold text-gray-900">{{ value }}</h2>
-        <div v-if="booleanFields.length > 0" class="mb-2">
-          <div class="flex flex-wrap gap-2">
-            <BooleanField v-for="[key, value] in booleanFields" :key="key" :value="value" :field-name="key"
-              :format-label="formatLabel" />
+
+      <!-- Title fields at the top -->
+      <div v-if="titleFields.length > 0" class="mb-4 flex md:flex-row flex-col gap-2">
+        <!-- Avatar Section -->
+        <div class="flex justify-center mb-4">
+          <Avatar :label="getAvatarLabel()" :image="getAvatarImage()" size="xlarge" shape="circle"
+            class="border-2 border-gray-200 shadow-md bg-gray-100 p-2" />
+        </div>
+        <div v-for="[key, value] in titleFields" :key="key" class="flex flex-col justify-start gap-2 mb-2 ml-4">
+          <h2 class="text-2xl font-bold text-gray-900">{{ value }}</h2>
+          <div v-if="booleanFields.length > 0" class="mb-2">
+            <div class="flex flex-wrap gap-2">
+              <BooleanField v-for="[key, value] in booleanFields" :key="key" :value="value" :field-name="key"
+                :format-label="formatLabel" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Contact fields section -->
-    <div v-if="contactFields.length > 0" class="mb-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
-        <div v-for="[key, value] in contactFields" :key="key"
-          class="flex items-center justify-start bg-blue-50 rounded-lg p-1 gap-1">
-          <div class="flex items-center space-x-1">
-            <i :class="getContactFieldIcon(key, getSchemaProperty(key))"></i>
-          </div>
-          <div class="flex items-center space-x-1">
-            <span class="text-gray-800 font-medium text-sm truncate max-w-32" :title="value || 'Not provided'">
-              {{ value || 'Not provided' }}
-            </span>
+      <!-- Contact fields section -->
+      <div v-if="contactFields.length > 0" class="mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+          <div v-for="[key, value] in contactFields" :key="key"
+            class="flex items-center justify-start bg-blue-50 rounded-lg p-1 gap-1">
+            <div class="flex items-center space-x-1">
+              <i :class="getContactFieldIcon(key, getSchemaProperty(key))"></i>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="text-gray-800 font-medium text-sm truncate max-w-32" :title="value || 'Not provided'">
+                {{ value || 'Not provided' }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <!-- Currency Number Fields ({{ currencyNumberFields.length }}) -->
-    <div v-if="currencyNumberFields.length > 0" class="mb-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div v-for="[key, value] in currencyNumberFields" :key="key"
-          class="flex flex-col items-center justify-between bg-green-50 rounded-lg p-1 border border-green-200">
-          <div class="flex items-center space-x-1">
-            <span class="text-sm font-medium text-gray-700 truncate max-w-24" :title="memoizedFormatLabel(key)">{{
-              memoizedFormatLabel(key) }}</span>
-          </div>
-          <div class="flex items-center space-x-1">
-            <span class="text-gray-800 font-mono font-medium">
-              {{ memoizedFormatNumber(value || 0, key) }}
-            </span>
+      <!-- Currency Number Fields ({{ currencyNumberFields.length }}) -->
+      <div v-if="currencyNumberFields.length > 0" class="mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div v-for="[key, value] in currencyNumberFields" :key="key"
+            class="flex flex-col items-center justify-between bg-green-50 rounded-lg p-1 border border-green-200">
+            <div class="flex items-center space-x-1">
+              <span class="text-sm font-medium text-gray-700 truncate max-w-24" :title="memoizedFormatLabel(key)">{{
+                memoizedFormatLabel(key) }}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="text-gray-800 font-mono font-medium">
+                {{ memoizedFormatNumber(value || 0, key) }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Regular Number Fields ({{ regularNumberFields.length }}) -->
-    <div v-if="regularNumberFields.length > 0" class="mb-4">
-      <div class="gap-3">
-        <div v-for="[key, value] in regularNumberFields" :key="key"
-          class="flex-col items-center justify-between bg-gray-50 rounded-lg p-3">
-          <div class="flex items-center justify-between">
+      <!-- Regular Number Fields ({{ regularNumberFields.length }}) -->
+      <div v-if="regularNumberFields.length > 0" class="mb-4">
+        <div class="gap-3">
+          <div v-for="[key, value] in regularNumberFields" :key="key"
+            class="flex-col items-center justify-between bg-gray-50 rounded-lg p-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <i :class="getNumberFieldIcon(key, getSchemaProperty(key))" class="text-blue-500"></i>
+                <span class="text-sm font-medium text-gray-700" :title="memoizedFormatLabel(key)">{{
+                  memoizedFormatLabel(key) }}</span>
+              </div>
+              <span class="text-gray-800 font-mono font-medium text-lg">
+                {{ memoizedFormatNumber(value || 0, key) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- URL Fields -->
+      <div v-if="urlFields.length > 0" class="mb-4">
+        <div class="gap-3">
+          <div v-for="[key, value] in urlFields" :key="key"
+            class="flex-col items-center justify-between bg-purple-50 rounded-lg p-3 border border-purple-200">
             <div class="flex items-center space-x-2">
-              <i :class="getNumberFieldIcon(key, getSchemaProperty(key))" class="text-blue-500"></i>
+              <i class="pi pi-link text-purple-600"></i>
               <span class="text-sm font-medium text-gray-700" :title="memoizedFormatLabel(key)">{{
                 memoizedFormatLabel(key) }}</span>
             </div>
-            <span class="text-gray-800 font-mono font-medium text-lg">
-              {{ memoizedFormatNumber(value || 0, key) }}
-            </span>
+            <div class="flex items-center space-x-2">
+              <a :href="value" target="_blank" rel="noopener noreferrer"
+                class="text-purple-600 hover:text-purple-800 underline" :title="value">
+                {{ value || 'No URL' }}
+              </a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <!-- Dynamic fields -->
+      <div class="space-y-3 flex-1">
+        <div v-for="[key, property] in processedFieldsForRender" :key="key"
+          class="space-y-1 pt-2 border-b border-gray-100 last:border-b-0">
+          <!-- Field label -->
+          <div v-if="shouldShowLabel(key)" class="text-sm font-medium text-gray-700 mb-2">
+            <span v-if="property?.emoji" class="mr-2 text-base">{{ property.emoji }}</span>
+            <i v-else-if="property?.icon" :class="property.icon" class="mr-2 text-gray-500"></i>
+            <span class="truncate max-w-32" :title="memoizedFormatLabel(key)">{{ memoizedFormatLabel(key) }}</span>
+          </div>
 
-    <!-- URL Fields -->
-    <div v-if="urlFields.length > 0" class="mb-4">
-      <div class="gap-3">
-        <div v-for="[key, value] in urlFields" :key="key"
-          class="flex-col items-center justify-between bg-purple-50 rounded-lg p-3 border border-purple-200">
-          <div class="flex items-center space-x-2">
-            <i class="pi pi-link text-purple-600"></i>
-            <span class="text-sm font-medium text-gray-700" :title="memoizedFormatLabel(key)">{{
-              memoizedFormatLabel(key) }}</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <a :href="value" target="_blank" rel="noopener noreferrer"
-              class="text-purple-600 hover:text-purple-800 underline" :title="value">
-              {{ value || 'No URL' }}
-            </a>
-          </div>
+          <!-- Field content -->
+          <component :is="getFieldRenderer(key)" :value="item[key]" :field-name="key" :schema="schema" />
         </div>
       </div>
-    </div>
-    <!-- Dynamic fields -->
-    <div class="space-y-3 flex-1">
-      <div v-for="[key, property] in processedFieldsForRender" :key="key"
-        class="space-y-1 pt-2 border-b border-gray-100 last:border-b-0">
-        <!-- Field label -->
-        <div v-if="shouldShowLabel(key)" class="text-sm font-medium text-gray-700 mb-2">
-          <span v-if="property?.emoji" class="mr-2 text-base">{{ property.emoji }}</span>
-          <i v-else-if="property?.icon" :class="property.icon" class="mr-2 text-gray-500"></i>
-          <span class="truncate max-w-32" :title="memoizedFormatLabel(key)">{{ memoizedFormatLabel(key) }}</span>
-        </div>
 
-        <!-- Field content -->
-        <component :is="getFieldRenderer(key)" :value="item[key]" :field-name="key" :schema="schema" />
+      <!-- Timestamps -->
+      <div class="text-xs text-gray-500 mt-auto pt-2 border-t border-gray-100 flex flex-row justify-end">
+        <span>Added: {{ formatDate(item.created_time) }}</span>
+        <span v-if="item.last_edited_time !== item.created_time">
+          • Updated: {{ formatDate(item.last_edited_time) }}
+        </span>
       </div>
-    </div>
-
-    <!-- Timestamps -->
-    <div class="text-xs text-gray-500 mt-auto pt-2 border-t border-gray-100 flex flex-row justify-end">
-      <span>Added: {{ formatDate(item.created_time) }}</span>
-      <span v-if="item.last_edited_time !== item.created_time">
-        • Updated: {{ formatDate(item.last_edited_time) }}
-      </span>
     </div>
   </div>
 
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 
@@ -155,6 +163,9 @@ import IconButton from './IconButton.vue'
 // Composables
 const router = useRouter()
 const confirm = useConfirm()
+
+// View mode state
+const viewMode = ref('card') // 'card' or 'table'
 
 
 
@@ -328,6 +339,10 @@ const deleteItem = () => {
       // User cancelled deletion
     }
   })
+}
+
+const toggleViewMode = () => {
+  viewMode.value = viewMode.value === 'card' ? 'table' : 'card'
 }
 
 
