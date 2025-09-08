@@ -198,7 +198,7 @@
               <button @click="viewMode = 'card'" :class="[
                 'px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
                 viewMode === 'card'
-                  ? 'bg-white text-gray-900 shadow-sm'
+                  ? 'bg-white text-white shadow-sm bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg'
                   : 'text-gray-500 hover:text-gray-700'
               ]">
                 <i class="pi pi-th-large mr-2"></i>
@@ -207,7 +207,7 @@
               <button @click="viewMode = 'table'" :class="[
                 'px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
                 viewMode === 'table'
-                  ? 'bg-white text-gray-900 shadow-sm'
+                  ? 'bg-white text-white shadow-sm bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg'
                   : 'text-gray-500 hover:text-gray-700'
               ]">
                 <i class="pi pi-table mr-2"></i>
