@@ -33,6 +33,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SelectField: typeof import('./src/components/field-renderers/SelectField.vue')['default']
+    TableView: typeof import('./src/components/TableView.vue')['default']
     Textarea: typeof import('primevue/textarea')['default']
     TextField: typeof import('./src/components/field-renderers/TextField.vue')['default']
     Toast: typeof import('primevue/toast')['default']

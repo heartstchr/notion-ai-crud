@@ -29,7 +29,7 @@
           <div v-if="booleanFields.length > 0" class="mb-2">
             <div class="flex flex-wrap gap-2">
               <BooleanField v-for="[key, value] in booleanFields" :key="key" :value="value" :field-name="key"
-                :format-label="formatLabel" />
+                :format-label="(fieldName) => memoizedFormatLabel(fieldName)" />
             </div>
           </div>
         </div>
@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 
@@ -163,9 +163,6 @@ import IconButton from './IconButton.vue'
 // Composables
 const router = useRouter()
 const confirm = useConfirm()
-
-// View mode state
-const viewMode = ref('card') // 'card' or 'table'
 
 
 
@@ -339,10 +336,6 @@ const deleteItem = () => {
       // User cancelled deletion
     }
   })
-}
-
-const toggleViewMode = () => {
-  viewMode.value = viewMode.value === 'card' ? 'table' : 'card'
 }
 
 
