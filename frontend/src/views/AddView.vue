@@ -21,9 +21,18 @@
     </div>
 
     <!-- Form -->
-    <div v-if="isFormReady" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <FormFields :editing-item="item" :submitting="submitting" :form-errors="formErrors" @submit-form="submitForm"
-        @refresh-schema="retryLoad" @update:form-data="updateFormData" @cancel-form="goBack" />
+    <div v-if="isFormReady" class="relative">
+      <!-- Gradient Border with Drop Shadow -->
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg p-0.5 shadow-lg"
+        style="filter: drop-shadow(0 10px 25px rgba(0, 144, 247, 0.3)) drop-shadow(0 4px 6px rgba(186, 98, 252, 0.2)) drop-shadow(0 1px 3px rgba(242, 65, 107, 0.2)) drop-shadow(0 0 0 rgba(245, 86, 0, 0.1));">
+        <div class="bg-white rounded-lg h-full w-full"></div>
+      </div>
+
+      <div class="relative z-10 bg-white rounded-lg p-6">
+        <FormFields :editing-item="item" :submitting="submitting" :form-errors="formErrors" @submit-form="submitForm"
+          @refresh-schema="retryLoad" @update:form-data="updateFormData" @cancel-form="goBack" />
+      </div>
     </div>
 
     <!-- Toast for notifications -->

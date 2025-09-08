@@ -32,6 +32,7 @@ declare module 'vue' {
     RichTextField: typeof import('./src/components/field-renderers/RichTextField.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchFilterSkeleton: typeof import('./src/components/SearchFilterSkeleton.vue')['default']
     SelectField: typeof import('./src/components/field-renderers/SelectField.vue')['default']
     TableView: typeof import('./src/components/TableView.vue')['default']
     Textarea: typeof import('primevue/textarea')['default']

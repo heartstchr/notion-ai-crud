@@ -1,8 +1,13 @@
 <template>
   <div class="space-y-6">
     <!-- Loading State - show until we have both schema and items ready -->
-    <LoadingSkeleton v-if="loading || (!schema || items.length === 0)" :count="6"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" />
+    <div v-if="loading || (!schema || items.length === 0)">
+      <!-- Search and Filter Skeleton -->
+      <SearchFilterSkeleton />
+
+      <!-- Content Skeleton -->
+      <LoadingSkeleton :count="6" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" />
+    </div>
 
     <!-- Content (only show when we have both schema and items ready) -->
     <div v-else-if="schema && items.length > 0" class="space-y-6">
@@ -250,6 +255,7 @@ import LoadMoreButton from './LoadMoreButton.vue'
 import CardView from './CardView.vue'
 import TableView from './TableView.vue'
 import EmptyState from './EmptyState.vue'
+import SearchFilterSkeleton from './SearchFilterSkeleton.vue'
 import { useRouter } from 'vue-router'
 import { computed, ref } from 'vue'
 import NotionMiddleware from '../services/notionMiddleware.js'
