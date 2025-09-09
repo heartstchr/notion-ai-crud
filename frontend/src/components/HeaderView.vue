@@ -29,7 +29,7 @@
       </Button>
       <Button @click="goToAdd" severity="secondary" text class="p-0">
         <div
-git           class="bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg px-3 py-2 shadow-lg flex items-center gap-2">
+          class="bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg px-3 py-2 shadow-lg flex items-center gap-2">
           <i class="pi pi-plus text-white"></i>
           <span class="text-white font-medium">Add</span>
         </div>
