@@ -524,7 +524,6 @@ const removeFileFromField = (fieldName, index) => {
 
 // Handle file selection (when files are chosen but not yet uploaded)
 const onFileSelect = (event, fieldName) => {
-  console.log('File select event:', event)
 
   // Get the files from the select event
   const files = event.files || []
@@ -545,14 +544,12 @@ const onFileSelect = (event, fieldName) => {
 
 // Handle upload progress
 const onUploadProgress = (event, fieldName) => {
-  console.log('Upload progress:', event)
   // The progress is handled internally by PrimeVue FileUpload component
   // This event is just for logging or additional progress handling if needed
 }
 
 // Handle advanced upload
 const onAdvancedUpload = async (event, fieldName) => {
-  console.log('Advanced upload event:', event)
 
   try {
     // When using :auto="true", PrimeVue handles the upload automatically
@@ -563,7 +560,6 @@ const onAdvancedUpload = async (event, fieldName) => {
       const result = JSON.parse(response)
 
       if (result.success && result.files) {
-        console.log('Files uploaded successfully:', result.files)
 
         // Update the field with uploaded file URLs
         emit('update:formData', {
@@ -579,7 +575,7 @@ const onAdvancedUpload = async (event, fieldName) => {
         console.error('Upload failed:', result.error)
       }
     } else {
-      console.log('No response from upload')
+      // No response from upload
     }
   } catch (error) {
     console.error('Upload processing failed:', error)

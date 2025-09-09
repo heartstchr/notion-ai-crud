@@ -340,8 +340,7 @@ const filteredItems = computed(() => {
 
   // Debug: Log field names for first item to help identify boolean fields
   if (props.items.length > 0 && (verifiedFilter.value || availableFilter.value)) {
-    console.log('Available fields:', Object.keys(props.items[0]))
-    console.log('Boolean fields:', Object.entries(props.items[0]).filter(([key, value]) => typeof value === 'boolean'))
+    // Available fields and boolean fields identified for filtering
   }
 
   // Apply boolean filters first

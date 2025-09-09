@@ -16,11 +16,23 @@
     </p>
 
     <div class="flex justify-end gap-4 flex-wrap">
-      <Button @click="refreshSchema" :disabled="loading" severity="secondary">
-        <i class="pi pi-refresh"></i>Refresh
+      <Button @click="refreshSchema" :disabled="loading" severity="secondary" text class="p-0">
+        <div
+          class="bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg p-0.5 shadow-lg">
+          <div class="bg-white rounded-md px-3 py-2 flex items-center gap-2">
+            <i
+              class="pi pi-refresh bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent"></i>
+            <span
+              class="bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent font-medium">Refresh</span>
+          </div>
+        </div>
       </Button>
-      <Button @click="goToAdd" severity="primary">
-        <i class="pi pi-plus"></i>Add
+      <Button @click="goToAdd" severity="secondary" text class="p-0">
+        <div
+git           class="bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg px-3 py-2 shadow-lg flex items-center gap-2">
+          <i class="pi pi-plus text-white"></i>
+          <span class="text-white font-medium">Add</span>
+        </div>
       </Button>
     </div>
   </div>

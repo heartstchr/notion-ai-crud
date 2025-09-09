@@ -1,6 +1,7 @@
 <script setup>
 import { RouterView } from 'vue-router'
 import ConfirmDialog from 'primevue/confirmdialog'
+import logo from './assets/logo-crud.png'
 </script>
 
 
@@ -15,9 +16,12 @@ import ConfirmDialog from 'primevue/confirmdialog'
 
       <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-          <router-link to="/"
-            class="text-xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
-            Notion CRUD Web App
+          <router-link to="/" class="flex items-center gap-3">
+            <img :src="logo" alt="Logo" class="h-16 w-16 object-contain" />
+            <span
+              class="text-xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+              CRUD Web App
+            </span>
           </router-link>
           <div class="flex space-x-8">
           </div>

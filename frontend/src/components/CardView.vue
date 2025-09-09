@@ -579,7 +579,7 @@ const handleImageError = (event) => {
 }
 
 const handleImageLoad = (event) => {
-  console.log('Avatar image loaded successfully:', event.target.src)
+  // Image loaded successfully
 }
 
 // File handling helper functions

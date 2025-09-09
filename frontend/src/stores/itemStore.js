@@ -113,7 +113,6 @@ export const useItemStore = defineStore('item', () => {
         description: databaseInfo.value.description,
         schema: databaseInfo.value.schema,
       }
-      console.log('result', result)
       // Returning database info
       return result
     }

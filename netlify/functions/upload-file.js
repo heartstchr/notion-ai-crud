@@ -27,7 +27,6 @@ export default async function handler(request, context) {
 
     // Parse the multipart form data
     const formData = await request.formData();
-    console.log("FormData entries:", Array.from(formData.entries()));
 
     // Try to get files with different possible keys
     let files = formData.getAll("files");
@@ -45,14 +44,9 @@ export default async function handler(request, context) {
         .map(([key, value]) => value);
     }
 
-    console.log(
-      "Files found:",
-      files.length,
-      files.map((f) => f.name)
-    );
+    // Files found for upload
 
     if (!files || files.length === 0) {
-      console.log("No files provided in request");
       return createErrorResponse("No files provided", 400);
     }
 
