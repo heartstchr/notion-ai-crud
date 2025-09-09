@@ -198,6 +198,42 @@
         </div>
       </div>
 
+      <!-- File Fields Section -->
+      <div v-if="fileFields.length > 0" class="space-y-4">
+        <div class="grid grid-cols-1 gap-4">
+          <div v-for="field in fileFields" :key="field.name" class="space-y-2">
+            <label :for="field.name" class="block text-sm font-medium text-gray-700">
+              <span v-if="field.emoji" class="mr-2 text-lg">{{ field.emoji }}</span>
+              <i v-else-if="field.icon" :class="field.icon" class="mr-2 text-gray-500"></i>
+              {{ field.label }}
+              <span v-if="field.required" class="text-red-500 ml-1">*</span>
+            </label>
+
+            <!-- File Upload -->
+            <FileUpload :id="field.name" :model-value="getFileFieldValue(field.name)"
+              @update:model-value="(value) => updateFileField(field.name, value)"
+              @upload="onAdvancedUpload($event, field.name)" @select="onFileSelect($event, field.name)"
+              @progress="onUploadProgress($event, field.name)" :class="{ 'p-invalid': formErrors[field.name] }"
+              class="w-full" mode="advanced" :multiple="true" :auto="true" :maxFileSize="10000000" accept="image/*"
+              url="/.netlify/functions/upload-file" :choose-label="`Choose Files`" :show-upload-button="false"
+              :show-cancel-button="false">
+              <template #empty>
+                <div class="flex flex-col items-center justify-center py-8 text-gray-500">
+                  <i class="pi pi-cloud-upload text-4xl mb-4"></i>
+                  <span class="text-lg font-medium">Drag and drop files to here to upload</span>
+                  <span class="text-sm mt-2">or click to browse</span>
+                </div>
+              </template>
+            </FileUpload>
+
+
+            <small v-if="formErrors[field.name]" class="text-red-600 block">
+              {{ formErrors[field.name] }}
+            </small>
+          </div>
+        </div>
+      </div>
+
       <!-- Other Fields Section -->
       <div v-if="otherFields.length > 0" class="space-y-4">
         <div class="grid grid-cols-1 gap-4">
@@ -258,6 +294,7 @@ import {
   extractOptionsFromRawProperty,
   currencyFormats
 } from '../utils/mappingUtils.js'
+import FileField from './field-renderers/FileField.vue'
 
 // Get field value directly from editingItem
 const getFieldValue = (fieldName) => {
@@ -306,6 +343,11 @@ const getFormFieldsArray = computed(() => {
     // If it's a multi_select field, ensure the type is correctly set
     if (property.multi_select && Array.isArray(property.multi_select)) {
       fieldType = 'multi_select'
+    }
+
+    // If it's a files field, ensure the type is correctly set
+    if (property.files && Array.isArray(property.files)) {
+      fieldType = 'files'
     }
 
     return {
@@ -377,6 +419,10 @@ const selectionFields = computed(() => {
   )
 })
 
+const fileFields = computed(() => {
+  return getFormFieldsArray.value.filter(field => field.type === 'files')
+})
+
 const otherFields = computed(() => {
   return getFormFieldsArray.value.filter(field => {
     const fieldName = field.name.toLowerCase()
@@ -391,6 +437,7 @@ const otherFields = computed(() => {
       field.type !== 'checkbox' &&
       field.type !== 'select' &&
       field.type !== 'multi_select' &&
+      field.type !== 'files' &&
       !isContactField
   })
 })
@@ -440,6 +487,104 @@ const removeMultiselectItem = (fieldName, itemToRemove) => {
     return item !== itemToRemove
   })
   updateMultiselectField(fieldName, updatedValue)
+}
+
+// File field handling methods
+const getFileFieldValue = (fieldName) => {
+  const value = props.editingItem?.[fieldName]?.value || []
+  return Array.isArray(value) ? value : []
+}
+
+const updateFileField = (fieldName, files) => {
+  // Convert FileList to array and create file objects
+  const fileArray = Array.from(files || []).map(file => ({
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    lastModified: file.lastModified,
+    file: file, // Keep the actual File object for upload
+    preview: URL.createObjectURL(file) // Create preview URL for immediate display
+  }))
+
+  emit('update:formData', { [fieldName]: fileArray })
+}
+
+const removeFileFromField = (fieldName, index) => {
+  const currentFiles = getFileFieldValue(fieldName)
+  const fileToRemove = currentFiles[index]
+
+  // Clean up object URL to prevent memory leaks
+  if (fileToRemove && fileToRemove.preview) {
+    URL.revokeObjectURL(fileToRemove.preview)
+  }
+
+  const updatedFiles = currentFiles.filter((_, i) => i !== index)
+  emit('update:formData', { [fieldName]: updatedFiles })
+}
+
+// Handle file selection (when files are chosen but not yet uploaded)
+const onFileSelect = (event, fieldName) => {
+  console.log('File select event:', event)
+
+  // Get the files from the select event
+  const files = event.files || []
+
+  // Convert to our file format
+  const fileArray = files.map(file => ({
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    lastModified: file.lastModified,
+    file: file, // Keep the actual File object for upload
+    preview: URL.createObjectURL(file) // Create preview URL for immediate display
+  }))
+
+  // Update the field with the new files
+  emit('update:formData', { [fieldName]: fileArray })
+}
+
+// Handle upload progress
+const onUploadProgress = (event, fieldName) => {
+  console.log('Upload progress:', event)
+  // The progress is handled internally by PrimeVue FileUpload component
+  // This event is just for logging or additional progress handling if needed
+}
+
+// Handle advanced upload
+const onAdvancedUpload = async (event, fieldName) => {
+  console.log('Advanced upload event:', event)
+
+  try {
+    // When using :auto="true", PrimeVue handles the upload automatically
+    // The event contains the response from the server
+    const response = event.xhr?.response
+
+    if (response) {
+      const result = JSON.parse(response)
+
+      if (result.success && result.files) {
+        console.log('Files uploaded successfully:', result.files)
+
+        // Update the field with uploaded file URLs
+        emit('update:formData', {
+          [fieldName]: result.files.map(uploadedFile => ({
+            name: uploadedFile.name,
+            url: uploadedFile.url,
+            type: uploadedFile.type,
+            size: uploadedFile.size,
+            blobKey: uploadedFile.blobKey
+          }))
+        })
+      } else {
+        console.error('Upload failed:', result.error)
+      }
+    } else {
+      console.log('No response from upload')
+    }
+  } catch (error) {
+    console.error('Upload processing failed:', error)
+    // You might want to show an error message to the user here
+  }
 }
 
 

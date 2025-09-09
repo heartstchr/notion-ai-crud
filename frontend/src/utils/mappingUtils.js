@@ -119,6 +119,7 @@ export const fieldTypeIconMap = {
   rich_text: 'pi pi-file-text',
   title: 'pi pi-user',
   status: 'pi pi-info-circle',
+  files: 'pi pi-file',
 }
 
 // Get default icon for a field based on type and format
@@ -150,6 +151,7 @@ export const generatePlaceholder = (fieldName, type, format) => {
     date: 'Select date',
     title: 'Enter title',
     rich_text: 'Enter description',
+    files: 'Choose files to upload',
   }
 
   return placeholders[type] || `Enter ${formatLabel(fieldName).toLowerCase()}`

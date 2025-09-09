@@ -4,7 +4,6 @@
 import {
   mapNotionTypeToFormType as mapTypeFromUtils,
   generatePlaceholder as generatePlaceholderFromUtils,
-  getFieldIcon as getDefaultIconFromUtils,
   getDefaultIcon,
 } from '../utils/mappingUtils.js'
 import ValidationService from './validationService.js'
@@ -49,6 +48,15 @@ class NotionMiddleware {
           break
         case 'status':
           result[key] = property.status?.name || ''
+          break
+        case 'files':
+          result[key] =
+            property.files?.map((file) => ({
+              name: file.name,
+              url: file.url || file.external?.url,
+              type: file.type,
+              size: file.size,
+            })) || []
           break
         default:
           result[key] = ''
@@ -106,6 +114,18 @@ class NotionMiddleware {
             break
           case 'status':
             properties[key] = { status: { name: value } }
+            break
+          case 'files':
+            if (Array.isArray(value)) {
+              properties[key] = {
+                files: value.map((file) => ({
+                  name: file.name,
+                  external: { url: file.url },
+                })),
+              }
+            } else {
+              properties[key] = { files: [] }
+            }
             break
           default:
             // Fallback to rich_text for unknown types

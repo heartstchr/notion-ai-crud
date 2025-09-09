@@ -21,7 +21,14 @@
       <div v-if="titleFields.length > 0" class="mb-4 flex md:flex-row flex-col gap-2">
         <!-- Avatar Section -->
         <div class="flex justify-center mb-4">
-          <Avatar :label="getAvatarLabel()" :image="getAvatarImage()" size="xlarge" shape="circle"
+          <!-- Custom avatar using img tag since Avatar component has issues with dynamic URLs -->
+          <div v-if="avatarImageUrl" class="relative">
+            <img :src="avatarImageUrl" :alt="getAvatarLabel()"
+              class="w-24 h-24 rounded-full border-2 border-gray-200 shadow-md bg-gray-100 object-cover"
+              @error="handleImageError" @load="handleImageLoad" />
+          </div>
+          <!-- Fallback to Avatar component with label if no image -->
+          <Avatar v-else :label="getAvatarLabel()" size="xlarge" shape="circle"
             class="border-2 border-gray-200 shadow-md bg-gray-100 p-2" />
         </div>
         <div v-for="[key, value] in titleFields" :key="key" class="flex flex-col justify-start gap-2 mb-2 ml-4">
@@ -107,6 +114,53 @@
           </div>
         </div>
       </div>
+
+      <!-- File Fields -->
+      <div v-if="fileFields.length > 0" class="mb-4">
+        <div class="space-y-3">
+          <div v-for="[key, property] in fileFields" :key="key" class="space-y-1">
+            <!-- Field label -->
+            <div class="text-sm font-medium text-gray-700 mb-2">
+              <span v-if="property?.emoji" class="mr-2 text-base">{{ property.emoji }}</span>
+              <i v-else-if="property?.icon" :class="property.icon" class="mr-2 text-gray-500"></i>
+              <i v-else class="pi pi-paperclip mr-2 text-gray-500"></i>
+              <span class="truncate max-w-32" :title="memoizedFormatLabel(key)">{{ memoizedFormatLabel(key) }}</span>
+            </div>
+            <!-- Custom file display -->
+            <div class="space-y-2">
+              <div v-if="item[key] && Array.isArray(item[key]) && item[key].length > 0" class="space-y-2">
+                <div v-for="(file, index) in item[key]" :key="index"
+                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div class="flex items-center space-x-3">
+                    <!-- Image preview for image files -->
+                    <div v-if="isImageFile(file)" class="flex-shrink-0">
+                      <img :src="getFilePreviewUrl(file)" :alt="file.name || 'File preview'"
+                        class="w-12 h-12 object-cover rounded-lg border border-gray-200" />
+                    </div>
+                    <!-- File icon for non-image files -->
+                    <i v-else class="pi pi-file text-blue-500 text-lg"></i>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-900 truncate">{{ file.name || 'Unknown file' }}</p>
+                      <p v-if="file.size" class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <a v-if="file.url" :href="file.url" target="_blank" rel="noopener noreferrer"
+                      class="text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                      View
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-center py-4 text-gray-500">
+                <i class="pi pi-file text-4xl text-gray-300 mb-2 block"></i>
+                <p class="text-sm">No files uploaded</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Dynamic fields -->
       <div class="space-y-3 flex-1">
         <div v-for="[key, property] in processedFieldsForRender" :key="key"
@@ -136,7 +190,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 
@@ -157,6 +211,7 @@ import DateField from './field-renderers/DateField.vue'
 import SelectField from './field-renderers/SelectField.vue'
 import BooleanField from './field-renderers/BooleanField.vue'
 import TextField from './field-renderers/TextField.vue'
+import FileField from './field-renderers/FileField.vue'
 import Avatar from 'primevue/avatar'
 import IconButton from './IconButton.vue'
 
@@ -195,7 +250,7 @@ const emit = defineEmits(['deleteItem'])
 
 // Memoized field processing for better performance
 const processedFields = computed(() => {
-  if (!props.schema?.properties || !props.item) return { titleFields: [], contactFields: [], booleanFields: [], currencyNumberFields: [], regularNumberFields: [], urlFields: [], otherFields: [] }
+  if (!props.schema?.properties || !props.item) return { titleFields: [], contactFields: [], booleanFields: [], currencyNumberFields: [], regularNumberFields: [], urlFields: [], fileFields: [], otherFields: [] }
 
   const schemaProps = props.schema.properties
   const itemData = props.item
@@ -208,13 +263,14 @@ const processedFields = computed(() => {
     currencyNumberFields: [],
     regularNumberFields: [],
     urlFields: [],
+    fileFields: [],
     otherFields: []
   }
 
   Object.entries(schemaProps).forEach(([key, property]) => {
     const value = itemData[key]
 
-    if (!value && property.type !== 'checkbox' && property.type !== 'select' && property.type !== 'multi_select') return // Skip empty values except checkboxes and select fields
+    if (!value && property.type !== 'checkbox' && property.type !== 'select' && property.type !== 'multi_select' && property.type !== 'files') return // Skip empty values except checkboxes, select fields, and files
 
     switch (property.type) {
       case 'title':
@@ -233,6 +289,9 @@ const processedFields = computed(() => {
       case 'url':
         result.urlFields.push([key, value])
         break
+      case 'files':
+        result.fileFields.push([key, property])
+        break
       case 'select':
       case 'multi_select':
         result.otherFields.push([key, property])
@@ -247,7 +306,7 @@ const processedFields = computed(() => {
 
         if (isContactField) {
           result.contactFields.push([key, value])
-        } else if (property.type !== 'title' && property.type !== 'number' && property.type !== 'checkbox' && property.type !== 'url') {
+        } else if (property.type !== 'title' && property.type !== 'number' && property.type !== 'checkbox' && property.type !== 'url' && property.type !== 'files') {
           result.otherFields.push([key, property])
         }
       }
@@ -264,6 +323,7 @@ const booleanFields = computed(() => processedFields.value.booleanFields)
 const currencyNumberFields = computed(() => processedFields.value.currencyNumberFields)
 const regularNumberFields = computed(() => processedFields.value.regularNumberFields)
 const urlFields = computed(() => processedFields.value.urlFields)
+const fileFields = computed(() => processedFields.value.fileFields)
 const processedFieldsForRender = computed(() => processedFields.value.otherFields)
 
 // Memoized field renderer map for better performance
@@ -279,6 +339,7 @@ const fieldRendererMap = computed(() => {
       case 'select':
       case 'multi_select': map[key] = SelectField; break
       case 'checkbox': map[key] = BooleanField; break
+      case 'files': map[key] = FileField; break
       default: map[key] = TextField
     }
   })
@@ -381,6 +442,9 @@ const getContactFieldIcon = (fieldName, property) => {
 
 
 // Avatar helper methods
+// Ref for avatar image URL
+const avatarImageUrl = ref('')
+
 const getAvatarLabel = () => {
   // Try to get a name from title fields first
   if (titleFields.value.length > 0) {
@@ -408,27 +472,154 @@ const getAvatarLabel = () => {
   return '?'
 }
 
-const getAvatarImage = () => {
-  // Check if there's an image field in the schema
+const getAvatarImage = (item) => {
+  // First, check for avatar field in the item data (case-insensitive)
+  const avatarField = Object.entries(item).find(([key, property]) => {
+    return property &&
+      (key.toLowerCase().includes('avatar') ||
+        key.toLowerCase().includes('profile') ||
+        key.toLowerCase().includes('photo') ||
+        key.toLowerCase().includes('image'))
+  })
+
+  if (avatarField) {
+    const avatarValue = avatarField[1]
+
+    // Check if it's an array of files (like the actual data structure)
+    if (Array.isArray(avatarValue) && avatarValue.length > 0) {
+      const firstFile = avatarValue[0]
+      if (firstFile && firstFile.url) {
+        return firstFile.url
+      }
+    }
+
+    // Check if it's a file object with URL
+    if (avatarValue && typeof avatarValue === 'object' && !Array.isArray(avatarValue)) {
+      if (avatarValue.url) {
+        return avatarValue.url
+      }
+      // Check if it's a files array with the first file
+      if (avatarValue.files && Array.isArray(avatarValue.files) && avatarValue.files.length > 0) {
+        const firstFile = avatarValue.files[0]
+        if (firstFile && firstFile.url) {
+          return firstFile.url
+        }
+      }
+    }
+    // Check if it's a direct URL string
+    if (typeof avatarValue === 'string' && avatarValue.trim()) {
+      return avatarValue.trim()
+    }
+  }
+
+  // Fallback: check for any field with a URL
+  const urlField = Object.entries(item).find(([key, property]) => {
+    if (property && typeof property === 'object') {
+      // Check if it has a direct URL
+      if (property.url && typeof property.url === 'string') {
+        return true
+      }
+      // Check if it's a files array with URLs
+      if (property.files && Array.isArray(property.files) && property.files.length > 0) {
+        return property.files.some(file => file && file.url)
+      }
+    }
+    return false
+  })
+
+  if (urlField) {
+    const urlValue = urlField[1]
+
+    if (urlValue.url) {
+      return urlValue.url
+    }
+
+    if (urlValue.files && Array.isArray(urlValue.files) && urlValue.files.length > 0) {
+      const firstFile = urlValue.files[0]
+      if (firstFile && firstFile.url) {
+        return firstFile.url
+      }
+    }
+  }
+
+  // Final fallback: check for any files field in the schema
   if (props.schema?.properties) {
-    const imageField = Object.entries(props.schema.properties).find(([key, property]) => {
-      return property.type === 'url' &&
-        (key.toLowerCase().includes('image') ||
-          key.toLowerCase().includes('photo') ||
-          key.toLowerCase().includes('avatar') ||
-          key.toLowerCase().includes('picture'))
+    const filesField = Object.entries(props.schema.properties).find(([key, property]) => {
+      return property.type === 'files'
     })
 
-    if (imageField) {
-      const imageValue = props.item[imageField[0]]
-      if (imageValue && typeof imageValue === 'object' && imageValue.url) {
-        return imageValue.url
-      } else if (typeof imageValue === 'string' && imageValue.trim()) {
-        return imageValue.trim()
+    if (filesField) {
+      const filesValue = item[filesField[0]]
+
+      if (Array.isArray(filesValue) && filesValue.length > 0) {
+        const firstFile = filesValue[0]
+        if (firstFile && firstFile.url) {
+          return firstFile.url
+        }
       }
     }
   }
 
   return null
+}
+
+// Watch for changes in the item and update the avatar URL
+watch(() => props.item, (newItem) => {
+  if (newItem) {
+    const imageUrl = getAvatarImage(newItem)
+    avatarImageUrl.value = imageUrl
+  }
+}, { immediate: true, deep: true })
+
+// Image event handlers
+const handleImageError = (event) => {
+  console.error('Avatar image failed to load:', event.target.src)
+  // Optionally clear the URL to show fallback
+  // avatarImageUrl.value = ''
+}
+
+const handleImageLoad = (event) => {
+  console.log('Avatar image loaded successfully:', event.target.src)
+}
+
+// File handling helper functions
+const isImageFile = (file) => {
+  if (!file) return false
+
+  // Check by MIME type first (for newly selected files)
+  if (file.type && file.type.startsWith('image/')) {
+    return true
+  }
+
+  // Check by file extension (primary method for uploaded files)
+  const fileName = file.name || file.filename || ''
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.ico']
+  return imageExtensions.some(ext => fileName.toLowerCase().endsWith(ext))
+}
+
+const getFilePreviewUrl = (file) => {
+  // If file has a URL (already uploaded), use that
+  if (file.url) {
+    return file.url
+  }
+
+  // If file has a blob URL, use that
+  if (file.preview) {
+    return file.preview
+  }
+
+  // If file is a File object (newly selected), create object URL
+  if (file.file && file.file instanceof File) {
+    return URL.createObjectURL(file.file)
+  }
+
+  return ''
+}
+
+const formatFileSize = (bytes) => {
+  if (!bytes) return ''
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i]
 }
 </script>

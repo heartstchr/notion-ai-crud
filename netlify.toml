@@ -18,10 +18,10 @@
   [functions."check-status-changes"]
   schedule = "*/2 * * * *"
 
-  [functions."upload-image"]
+  [functions."upload-file"]
   # This function uses Netlify Blobs for file storage
   
-  [functions."serve-blob"]
+  [functions."blob"]
   # This function serves files from Netlify Blobs
 
   [functions.environment]

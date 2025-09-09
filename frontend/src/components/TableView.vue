@@ -20,7 +20,10 @@
             <tr>
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
-                {{ getTitleFieldLabel() || 'Item' }}
+                <div class="flex items-center space-x-2">
+                  <i class="pi pi-user text-blue-500"></i>
+                  <span>{{ getTitleFieldLabel() || 'Item' }}</span>
+                </div>
               </th>
               <th v-for="[key, property] in getContactFieldsForHeader()" :key="key"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -43,6 +46,13 @@
                   <span>{{ formatLabel(key) }}</span>
                 </div>
               </th>
+              <th v-for="[key, property] in getFileFieldsForHeader()" :key="key"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-32">
+                <div class="flex items-center space-x-2">
+                  <i class="pi pi-paperclip text-blue-500"></i>
+                  <span>{{ formatLabel(key) }}</span>
+                </div>
+              </th>
               <th v-for="[key, property] in getOtherFieldsForHeader()" :key="key"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <div class="flex items-center space-x-2">
@@ -61,7 +71,13 @@
               <!-- Item Column -->
               <td class="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10">
                 <div class="flex items-center space-x-3">
-                  <Avatar :label="getAvatarLabel(item)" :image="getAvatarImage(item)" size="medium" shape="circle"
+                  <!-- Custom avatar using img tag since Avatar component has issues with dynamic URLs -->
+                  <div v-if="getAvatarImage(item)" class="flex-shrink-0">
+                    <img :src="getAvatarImage(item)" :alt="getAvatarLabel(item)"
+                      class="w-10 h-10 rounded-full border-2 border-gray-200 shadow-sm bg-gray-100 object-cover" />
+                  </div>
+                  <!-- Fallback to Avatar component with label if no image -->
+                  <Avatar v-else :label="getAvatarLabel(item)" size="medium" shape="circle"
                     class="border-2 border-gray-200 shadow-sm bg-gray-100" />
                   <div>
                     <div class="text-sm font-medium text-gray-900">
@@ -108,6 +124,37 @@
                   <span v-if="!item[key] || item[key].length === 0" class="text-sm text-gray-400">
                     No tags
                   </span>
+                </div>
+              </td>
+
+              <!-- File Fields Columns -->
+              <td v-for="[key, property] in getFileFieldsForHeader()" :key="key" class="px-6 py-4 min-w-32">
+                <div class="space-y-2">
+                  <div v-if="item[key] && Array.isArray(item[key]) && item[key].length > 0" class="space-y-1">
+                    <div v-for="(file, index) in item[key].slice(0, 2)" :key="index"
+                      class="flex items-center space-x-2">
+                      <!-- Image preview for image files -->
+                      <div v-if="isImageFile(file)" class="flex-shrink-0">
+                        <img :src="getFilePreviewUrl(file)" :alt="file.name || 'File preview'"
+                          class="w-8 h-8 object-cover rounded border border-gray-200" />
+                      </div>
+                      <!-- File icon for non-image files -->
+                      <i v-else class="pi pi-file text-blue-500 text-sm"></i>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-xs text-gray-900 truncate">{{ file.name || 'Unknown file' }}</p>
+                        <a v-if="file.url" :href="file.url" target="_blank" rel="noopener noreferrer"
+                          class="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                          View
+                        </a>
+                      </div>
+                    </div>
+                    <div v-if="item[key].length > 2" class="text-xs text-gray-500">
+                      +{{ item[key].length - 2 }} more files
+                    </div>
+                  </div>
+                  <div v-else class="text-sm text-gray-400">
+                    No files
+                  </div>
                 </div>
               </td>
 
@@ -301,6 +348,12 @@ const getOtherFieldIcon = (fieldName, property) => {
   if (property.type === 'rich_text') {
     return 'pi pi-file-edit'
   }
+  if (property.type === 'files') {
+    return 'pi pi-file'
+  }
+  if (property.type === 'avatar' || fieldNameLower.includes('avatar') || fieldNameLower.includes('profile') || fieldNameLower.includes('photo')) {
+    return 'pi pi-user'
+  }
   if (fieldNameLower.includes('bio') || fieldNameLower.includes('description') || fieldNameLower.includes('notes')) {
     return 'pi pi-file-text'
   }
@@ -341,22 +394,90 @@ const getAvatarLabel = (item) => {
 }
 
 const getAvatarImage = (item) => {
-  if (!props.schema?.properties) return null
-
-  const imageField = Object.entries(props.schema.properties).find(([key, property]) => {
-    return property.type === 'url' &&
-      (key.toLowerCase().includes('image') ||
+  // First, check for avatar field in the item data (case-insensitive)
+  const avatarField = Object.entries(item).find(([key, property]) => {
+    return property &&
+      (key.toLowerCase().includes('avatar') ||
+        key.toLowerCase().includes('profile') ||
         key.toLowerCase().includes('photo') ||
-        key.toLowerCase().includes('avatar') ||
-        key.toLowerCase().includes('picture'))
+        key.toLowerCase().includes('image'))
   })
 
-  if (imageField) {
-    const imageValue = item[imageField[0]]
-    if (imageValue && typeof imageValue === 'object' && imageValue.url) {
-      return imageValue.url
-    } else if (typeof imageValue === 'string' && imageValue.trim()) {
-      return imageValue.trim()
+  if (avatarField) {
+    const avatarValue = avatarField[1]
+
+    // Check if it's an array of files (like the actual data structure)
+    if (Array.isArray(avatarValue) && avatarValue.length > 0) {
+      const firstFile = avatarValue[0]
+      if (firstFile && firstFile.url) {
+        return firstFile.url
+      }
+    }
+
+    // Check if it's a file object with URL
+    if (avatarValue && typeof avatarValue === 'object' && !Array.isArray(avatarValue)) {
+      if (avatarValue.url) {
+        return avatarValue.url
+      }
+      // Check if it's a files array with the first file
+      if (avatarValue.files && Array.isArray(avatarValue.files) && avatarValue.files.length > 0) {
+        const firstFile = avatarValue.files[0]
+        if (firstFile && firstFile.url) {
+          return firstFile.url
+        }
+      }
+    }
+    // Check if it's a direct URL string
+    if (typeof avatarValue === 'string' && avatarValue.trim()) {
+      return avatarValue.trim()
+    }
+  }
+
+  // Fallback: check for any field with a URL
+  const urlField = Object.entries(item).find(([key, property]) => {
+    if (property && typeof property === 'object') {
+      // Check if it has a direct URL
+      if (property.url && typeof property.url === 'string') {
+        return true
+      }
+      // Check if it's a files array with URLs
+      if (property.files && Array.isArray(property.files) && property.files.length > 0) {
+        return property.files.some(file => file && file.url)
+      }
+    }
+    return false
+  })
+
+  if (urlField) {
+    const urlValue = urlField[1]
+
+    if (urlValue.url) {
+      return urlValue.url
+    }
+
+    if (urlValue.files && Array.isArray(urlValue.files) && urlValue.files.length > 0) {
+      const firstFile = urlValue.files[0]
+      if (firstFile && firstFile.url) {
+        return firstFile.url
+      }
+    }
+  }
+
+  // Final fallback: check for any files field in the schema
+  if (props.schema?.properties) {
+    const filesField = Object.entries(props.schema.properties).find(([key, property]) => {
+      return property.type === 'files'
+    })
+
+    if (filesField) {
+      const filesValue = item[filesField[0]]
+
+      if (Array.isArray(filesValue) && filesValue.length > 0) {
+        const firstFile = filesValue[0]
+        if (firstFile && firstFile.url) {
+          return firstFile.url
+        }
+      }
     }
   }
 
@@ -439,6 +560,40 @@ const getUrlValue = (value) => {
   return value
 }
 
+// File handling helper functions
+const isImageFile = (file) => {
+  if (!file) return false
+
+  // Check by MIME type first
+  if (file.type && file.type.startsWith('image/')) {
+    return true
+  }
+
+  // Check by file extension (primary method for uploaded files)
+  const fileName = file.name || file.filename || ''
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.ico']
+  return imageExtensions.some(ext => fileName.toLowerCase().endsWith(ext))
+}
+
+const getFilePreviewUrl = (file) => {
+  // If file has a URL (already uploaded), use that
+  if (file.url) {
+    return file.url
+  }
+
+  // If file has a blob URL, use that
+  if (file.preview) {
+    return file.preview
+  }
+
+  // If file is a File object (newly selected), create object URL
+  if (file.file && file.file instanceof File) {
+    return URL.createObjectURL(file.file)
+  }
+
+  return ''
+}
+
 // Dynamic header label functions using memoizedFormatLabel
 const getTitleFieldLabel = () => {
   if (!props.schema?.properties) return null
@@ -516,6 +671,14 @@ const getMultiSelectFieldsForHeader = () => {
   )
 }
 
+const getFileFieldsForHeader = () => {
+  if (!props.schema?.properties) return []
+
+  return Object.entries(props.schema.properties).filter(([key, property]) =>
+    property.type === 'files'
+  )
+}
+
 const getOtherFieldsForHeader = () => {
   if (!props.schema?.properties) return []
 
@@ -523,6 +686,7 @@ const getOtherFieldsForHeader = () => {
     const isSpecialField = property.type === 'title' ||
       property.type === 'number' ||
       property.type === 'multi_select' ||
+      property.type === 'files' ||
       property.type === 'checkbox' ||
       key.toLowerCase().includes('email') ||
       key.toLowerCase().includes('phone') ||

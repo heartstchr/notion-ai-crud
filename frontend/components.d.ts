@@ -18,6 +18,8 @@ declare module 'vue' {
     Dropdown: typeof import('primevue/dropdown')['default']
     EmptyState: typeof import('./src/components/EmptyState.vue')['default']
     ErrorDisplay: typeof import('./src/components/ErrorDisplay.vue')['default']
+    FileField: typeof import('./src/components/field-renderers/FileField.vue')['default']
+    FileUpload: typeof import('primevue/fileupload')['default']
     FormFields: typeof import('./src/components/FormFields.vue')['default']
     HeaderView: typeof import('./src/components/HeaderView.vue')['default']
     IconButton: typeof import('./src/components/IconButton.vue')['default']
