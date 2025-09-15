@@ -28,8 +28,7 @@
         style="filter: drop-shadow(0 10px 25px rgba(0, 144, 247, 0.3)) drop-shadow(0 4px 6px rgba(186, 98, 252, 0.2)) drop-shadow(0 1px 3px rgba(242, 65, 107, 0.2)) drop-shadow(0 0 0 rgba(245, 86, 0, 0.1));">
         <div class="bg-white rounded-lg h-full w-full"></div>
       </div>
-
-      <div class="relative z-10 bg-white rounded-lg p-6">
+      <div class="relative z-10 rounded-lg p-6">
         <FormFields :editing-item="item" :submitting="submitting" :form-errors="formErrors" @submit-form="submitForm"
           @refresh-schema="retryLoad" @update:form-data="updateFormData" @cancel-form="goBack" />
       </div>

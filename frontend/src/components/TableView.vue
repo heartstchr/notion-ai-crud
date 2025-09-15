@@ -19,7 +19,7 @@
           <thead class="bg-gray-50 border-b border-gray-200">
             <tr>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider md:sticky md:left-0 bg-gray-50 z-10">
                 <div class="flex items-center space-x-2">
                   <i class="pi pi-user text-blue-500"></i>
                   <span>{{ getTitleFieldLabel() || 'Item' }}</span>
