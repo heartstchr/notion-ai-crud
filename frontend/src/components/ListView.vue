@@ -95,11 +95,11 @@
                 <div class="bg-gray-100 rounded-lg h-full w-full"></div>
               </div>
 
-              <div class="relative z-10 flex bg-gray-100 rounded-lg p-1">
+              <div class="relative z-10 flex rounded-lg p-1">
                 <button @click="viewMode = 'card'" :class="[
                   'px-2 sm:px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
                   viewMode === 'card'
-                    ? 'bg-white text-gray-900 shadow-sm'
+                    ? 'text-gray-900 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 ]">
                   <i class="pi pi-th-large sm:mr-2"></i>
@@ -108,7 +108,7 @@
                 <button @click="viewMode = 'table'" :class="[
                   'px-2 sm:px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
                   viewMode === 'table'
-                    ? 'bg-white text-gray-900 shadow-sm'
+                    ? 'text-gray-900 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 ]">
                   <i class="pi pi-table sm:mr-2"></i>
