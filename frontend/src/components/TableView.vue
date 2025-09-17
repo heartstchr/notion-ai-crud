@@ -69,7 +69,7 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="item in items" :key="item.id" class="hover:bg-gray-50">
               <!-- Item Column -->
-              <td class="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10">
+              <td class="px-6 py-4 whitespace-nowrap left-0 bg-white z-10">
                 <div class="flex items-center space-x-3">
                   <!-- Custom avatar using img tag since Avatar component has issues with dynamic URLs -->
                   <div v-if="getAvatarImage(item)" class="flex-shrink-0">
@@ -182,7 +182,7 @@
 
               <!-- Actions Column -->
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white z-10">
-                <div class="flex gap-2 justify-end">
+                <div class="flex gap-2 justify-end md:flex-row flex-col">
                   <IconButton icon="pi pi-pencil" severity="success" size="small" @click="editItem(item)" />
                   <IconButton icon="pi pi-trash" severity="danger" size="small" @click="deleteItem(item)" />
                 </div>

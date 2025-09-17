@@ -92,14 +92,14 @@
               <div
                 class="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg p-0.5 shadow-lg"
                 style="filter: drop-shadow(0 10px 25px rgba(0, 144, 247, 0.3)) drop-shadow(0 4px 6px rgba(186, 98, 252, 0.2)) drop-shadow(0 1px 3px rgba(242, 65, 107, 0.2)) drop-shadow(0 0 0 rgba(245, 86, 0, 0.1));">
-                <div class="bg-gray-100 rounded-lg h-full w-full"></div>
+                <div class="bg-white rounded-lg h-full w-full"></div>
               </div>
 
-              <div class="relative z-10 flex rounded-lg p-1">
+              <div class="relative z-10 flex bg-white rounded-lg p-1">
                 <button @click="viewMode = 'card'" :class="[
                   'px-2 sm:px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
                   viewMode === 'card'
-                    ? 'text-gray-900 shadow-sm'
+                    ? 'bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 text-white shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 ]">
                   <i class="pi pi-th-large sm:mr-2"></i>
@@ -108,7 +108,7 @@
                 <button @click="viewMode = 'table'" :class="[
                   'px-2 sm:px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
                   viewMode === 'table'
-                    ? 'text-gray-900 shadow-sm'
+                    ? 'bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 text-white shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 ]">
                   <i class="pi pi-table sm:mr-2"></i>
@@ -196,14 +196,14 @@
             <div
               class="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg p-0.5 shadow-lg"
               style="filter: drop-shadow(0 10px 25px rgba(0, 144, 247, 0.3)) drop-shadow(0 4px 6px rgba(186, 98, 252, 0.2)) drop-shadow(0 1px 3px rgba(242, 65, 107, 0.2)) drop-shadow(0 0 0 rgba(245, 86, 0, 0.1));">
-              <div class="bg-gray-100 rounded-lg h-full w-full"></div>
+              <div class="bg-white rounded-lg h-full w-full"></div>
             </div>
 
-            <div class="relative z-10 flex bg-gray-100 rounded-lg p-1">
+            <div class="relative z-10 flex bg-white rounded-lg p-1">
               <button @click="viewMode = 'card'" :class="[
                 'px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
                 viewMode === 'card'
-                  ? 'bg-white text-white shadow-sm bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg'
+                  ? 'bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               ]">
                 <i class="pi pi-th-large mr-2"></i>
@@ -212,7 +212,7 @@
               <button @click="viewMode = 'table'" :class="[
                 'px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
                 viewMode === 'table'
-                  ? 'bg-white text-white shadow-sm bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 rounded-lg'
+                  ? 'bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500 text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               ]">
                 <i class="pi pi-table mr-2"></i>
@@ -273,8 +273,7 @@ const verifiedFilter = ref(false)
 const availableFilter = ref(false)
 
 // Dynamic filter labels based on actual field names
-const verifiedFieldName = ref('Verified')
-const availableFieldName = ref('Available')
+// These are computed dynamically in detectedFieldNames computed property
 
 const props = defineProps({
   loading: {
@@ -308,13 +307,13 @@ const showEmptyState = computed(() => (props.items.length === 0 || !props.schema
 const detectedFieldNames = computed(() => {
   if (props.items.length === 0) return { verified: 'Verified', available: 'Available' }
 
-  const booleanFields = Object.entries(props.items[0]).filter(([key, value]) => typeof value === 'boolean')
+  const booleanFields = Object.entries(props.items[0]).filter(([, value]) => typeof value === 'boolean')
 
   let verifiedField = 'Verified'
   let availableField = 'Available'
 
   // Find verified field
-  const verifiedFieldEntry = booleanFields.find(([key, value]) => {
+  const verifiedFieldEntry = booleanFields.find(([key]) => {
     const keyLower = key.toLowerCase()
     return keyLower.includes('verified') || keyLower.includes('verify')
   })
@@ -323,7 +322,7 @@ const detectedFieldNames = computed(() => {
   }
 
   // Find available field
-  const availableFieldEntry = booleanFields.find(([key, value]) => {
+  const availableFieldEntry = booleanFields.find(([key]) => {
     const keyLower = key.toLowerCase()
     return keyLower.includes('available') || keyLower.includes('hire') || keyLower.includes('hiring')
   })
@@ -398,7 +397,7 @@ const filteredItems = computed(() => {
 
   return filtered.filter(item => {
     // Search in all string fields
-    return Object.entries(item).some(([key, value]) => {
+    return Object.entries(item).some(([, value]) => {
       if (value === null || value === undefined) return false
 
       // Handle different value types
