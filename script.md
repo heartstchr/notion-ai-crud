@@ -42,7 +42,7 @@ But here's the problem that kills most custom applications - maintenance. Your b
 
 Here's the revolutionary part - this app has intelligent schema detection. _[DEMO: Open Notion database in another tab]_ Every time someone opens your app, it automatically reads your Notion database, analyzes the structure, and instantly updates the interface. _[DEMO: Add a new column in Notion]_ Add a new column called "Certifications"? _[DEMO: Refresh the app]_ It appears in forms immediately. Change "Phone" to "Mobile Number"? The interface updates automatically. Switch currency from USD to JPY? The ¥ symbol appears instantly.
 
-It's like having a $100,000 development team that works 24/7, but it's completely free and requires zero technical knowledge.
+It's like having a $1000+ development team that works 24/7, but it's completely free and requires zero technical knowledge.
 
 Now you might be thinking "This sounds impossible. Show me this actually works across different industries."
 
