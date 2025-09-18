@@ -1,3 +1,0 @@
-template_name,template_body
-Welcome Email,"Hello {{Full Name}}, welcome to our platform!"
-Password Reset,"Hello {{Full Name}}, here is your password reset link: {{link}}"

@@ -25,18 +25,69 @@ notion-crud/
 ├── frontend/                    # Vue.js frontend application
 │   ├── src/
 │   │   ├── components/         # Reusable Vue components
+│   │   │   ├── field-renderers/ # Specialized field display components
+│   │   │   ├── CardView.vue    # Individual item card display
+│   │   │   ├── ListView.vue    # Grid container with search/filter
+│   │   │   ├── TableView.vue   # Table view for items
+│   │   │   ├── FormFields.vue  # Dynamic form generation
+│   │   │   ├── HeaderView.vue  # Database header with actions
+│   │   │   ├── PageHeader.vue  # Page title and navigation
+│   │   │   ├── EmptyState.vue  # Empty state component
+│   │   │   ├── ErrorDisplay.vue # Error handling component
+│   │   │   ├── LoadingSkeleton.vue # Loading state component
+│   │   │   ├── LoadMoreButton.vue # Pagination component
+│   │   │   ├── SearchFilterSkeleton.vue # Search loading state
+│   │   │   └── IconButton.vue  # Reusable icon button
 │   │   ├── views/              # Page-level components
+│   │   │   ├── HomeView.vue    # Main dashboard
+│   │   │   ├── AddView.vue     # Create new item form
+│   │   │   └── EditView.vue    # Edit existing item form
 │   │   ├── stores/             # Pinia state management
+│   │   │   ├── itemStore.js    # Main application state
+│   │   │   └── mappingStore.js  # Field mapping configurations
 │   │   ├── services/           # API and business logic
+│   │   │   ├── itemService.js  # Main API communication
+│   │   │   ├── notionMiddleware.js # Data transformation
+│   │   │   ├── validationService.js # Form validation
+│   │   │   ├── fileUploadService.js # File upload handling
+│   │   │   └── index.js        # Service exports
 │   │   ├── utils/              # Helper functions and utilities
-│   │   └── router/             # Vue Router configuration
+│   │   │   ├── mappingUtils.js # Field mapping and formatting
+│   │   │   ├── performanceUtils.js # Performance optimizations
+│   │   │   └── styleUtils.js   # CSS utility functions
+│   │   ├── composables/        # Vue composables
+│   │   │   └── useButtonPT.js  # PrimeVue button passthrough
+│   │   ├── router/             # Vue Router configuration
+│   │   │   └── index.js        # Route definitions
+│   │   ├── assets/             # Static assets
+│   │   │   ├── logo.png        # Application logo
+│   │   │   ├── logo-crud.png   # CRUD logo
+│   │   │   └── main.css        # Global styles
+│   │   ├── App.vue             # Root component
+│   │   └── main.js             # Application entry point
 │   ├── public/                 # Static assets (built files)
-│   └── package.json
+│   ├── package.json            # Frontend dependencies
+│   ├── vite.config.js          # Vite build configuration
+│   ├── eslint.config.js        # ESLint configuration
+│   ├── postcss.config.cjs     # PostCSS configuration
+│   ├── jsconfig.json           # JavaScript configuration
+│   └── components.d.ts         # Component type definitions
 ├── netlify/
 │   └── functions/
-│       └── notion-crud.js      # Main API proxy function
+│       ├── notion-crud.js      # Main API proxy function
+│       ├── upload-file.js      # File upload handler
+│       └── blob.js             # File serving from Netlify Blobs
 ├── netlify.toml                # Netlify configuration
-└── package.json                # Root package.json
+├── package.json                # Root package.json
+├── env.example                 # Environment variables template
+├── enable-blobs.js             # Netlify Blobs setup script
+├── CodebaseStructure.md        # This documentation file
+├── README.md                   # Project overview
+└── Step-by-Step Guide/         # Setup documentation
+    ├── GithubAccount.md
+    ├── GmailAccount.md
+    ├── NetlifyAccount.md
+    └── NotionAccount.md
 ```
 
 ## 🔄 Data Flow Architecture
@@ -233,6 +284,25 @@ transformPage(page); // Transform single item
 - Select option validation
 - Custom validation rules
 
+### FileUploadService (`services/fileUploadService.js`)
+
+**Purpose:** File upload handling and management
+**Key Features:**
+
+- File validation (type, size, format)
+- Upload progress tracking
+- Error handling and retry logic
+- File URL generation
+- Integration with Netlify Blobs
+
+**Key Methods:**
+
+```javascript
+uploadFiles(files, options); // Upload multiple files
+validateFile(file, options); // Validate file before upload
+getFileUrl(blobKey); // Get public URL for uploaded file
+```
+
 ## 🎨 Component Architecture
 
 ### Views (Page-level components)
@@ -242,7 +312,8 @@ transformPage(page); // Transform single item
 - Main dashboard displaying items grid
 - Handles schema loading and item fetching
 - Manages loading states and error handling
-- Coordinates with ListView component
+- Coordinates with HeaderView, ListView, and ErrorDisplay components
+- Implements parallel data loading for better performance
 
 **AddView.vue**
 
@@ -250,6 +321,7 @@ transformPage(page); // Transform single item
 - Dynamic form generation based on schema
 - Form validation and submission
 - Success/error handling with toast notifications
+- Uses PageHeader for consistent navigation
 
 **EditView.vue**
 
@@ -257,15 +329,35 @@ transformPage(page); // Transform single item
 - Pre-populates form with current values
 - Similar validation and submission to AddView
 - Handles item loading and error states
+- Uses PageHeader with back button functionality
 
-### Components
+### Core Components
 
-**FormFields.vue**
+**HeaderView.vue**
 
-- Dynamic form field generation
-- Field categorization and grouping
-- Handles all form field types
-- Real-time validation feedback
+- Database title and description display
+- Refresh schema functionality
+- Add new item button
+- Loading states with skeleton animations
+- Gradient-styled action buttons
+
+**ListView.vue**
+
+- Grid container for CardView components
+- Search and filtering functionality
+- View mode toggle (Card/Table)
+- Loading states and empty state handling
+- Pagination support (load more)
+- Responsive design with mobile/desktop layouts
+- Boolean field filtering (verified, available for hire)
+
+**TableView.vue**
+
+- Tabular display of items
+- Sortable columns
+- Responsive table design
+- Action buttons for each row
+- Field-specific rendering
 
 **CardView.vue**
 
@@ -273,18 +365,113 @@ transformPage(page); // Transform single item
 - Field-specific rendering and formatting
 - Action buttons (edit, delete)
 - Responsive layout with field grouping
+- Gradient borders and modern styling
 
-**ListView.vue**
+**FormFields.vue**
 
-- Grid container for CardView components
-- Loading states and empty state handling
-- Pagination support (load more)
+- Dynamic form field generation
+- Field categorization and grouping
+- Handles all form field types
+- Real-time validation feedback
+- File upload support
 
-**Field Renderers** (`components/field-renderers/`)
+### UI Components
 
-- Specialized components for each field type
+**PageHeader.vue**
+
+- Page title and description
+- Back button functionality
+- Context-aware content (add/edit modes)
+- Gradient-styled navigation elements
+
+**EmptyState.vue**
+
+- Empty state display when no items exist
+- Call-to-action for adding first item
+- Helpful messaging and guidance
+
+**ErrorDisplay.vue**
+
+- Error state handling
+- Retry functionality
+- User-friendly error messages
+
+**LoadingSkeleton.vue**
+
+- Loading state animations
+- Configurable skeleton count
+- Responsive skeleton layouts
+
+**LoadMoreButton.vue**
+
+- Pagination control
+- Loading state management
+- Infinite scroll support
+
+**SearchFilterSkeleton.vue**
+
+- Search and filter loading states
+- Skeleton animations for form elements
+
+**IconButton.vue**
+
+- Reusable icon button component
 - Consistent styling and behavior
-- Type-specific formatting and validation
+
+### Field Renderers (`components/field-renderers/`)
+
+**TextField.vue**
+
+- Simple text display
+- Handles string and number values
+
+**RichTextField.vue**
+
+- Rich text formatting support
+- Handles Notion's rich text structure
+- Text styling (bold, italic, underline, etc.)
+
+**NumbersField.vue**
+
+- Number field display with formatting
+- Currency symbol support
+- Grid layout for multiple number fields
+
+**SelectField.vue**
+
+- Single and multi-select display
+- Color-coded options
+- Tag-style presentation
+
+**BooleanField.vue**
+
+- Checkbox field display
+- Visual status indicators
+- Green/gray color coding
+
+**ContactField.vue**
+
+- Email and phone number display
+- Clickable contact links
+- Formatted contact information
+
+**DateField.vue**
+
+- Date formatting and display
+- Relative date calculations
+- Calendar icon integration
+
+**FileField.vue**
+
+- File attachment display
+- Download links
+- File type icons
+
+**UrlField.vue**
+
+- URL display with clickable links
+- External link indicators
+- Link validation
 
 ## 🌐 Backend (Netlify Functions)
 
@@ -315,6 +502,56 @@ DELETE /.netlify/functions/notion-crud?id={id}   // Delete item
 - Automatically masks fields marked with "(Private)"
 - Supports masking for email, phone, number, text, and URL fields
 - Preserves data structure while hiding sensitive information
+
+### File Upload Function (`netlify/functions/upload-file.js`)
+
+**Purpose:** Handle file uploads using Netlify Blobs
+**Features:**
+
+- Multi-file upload support
+- File validation and size limits
+- Unique filename generation
+- Public URL generation
+- CORS handling for file uploads
+
+**API Endpoints:**
+
+```javascript
+POST /.netlify/functions/upload-file              // Upload files
+```
+
+**Response Format:**
+
+```javascript
+{
+  success: true,
+  files: [
+    {
+      name: "original-filename.pdf",
+      url: "https://site.netlify.app/.netlify/functions/blob/filename.pdf",
+      type: "application/pdf",
+      size: 1024,
+      blobKey: "unique-filename.pdf"
+    }
+  ]
+}
+```
+
+### File Serving Function (`netlify/functions/blob.js`)
+
+**Purpose:** Serve files from Netlify Blobs storage
+**Features:**
+
+- Secure file serving
+- Proper MIME type handling
+- File access control
+- Error handling for missing files
+
+**API Endpoints:**
+
+```javascript
+GET /.netlify/functions/blob/{filename}           // Serve file
+```
 
 ## 🔧 Utility Systems
 
@@ -467,6 +704,8 @@ NOTION_DATABASE_ID=your_database_id
 - CORS headers for API access
 - SPA routing configuration
 - Environment variable management
+- Netlify Blobs configuration
+- Scheduled functions support
 
 ### Vite Configuration (`frontend/vite.config.js`)
 
@@ -474,5 +713,32 @@ NOTION_DATABASE_ID=your_database_id
 - Development proxy for Netlify functions
 - Component auto-import configuration
 - Path aliases and build output
+
+### Tech Stack
+
+**Frontend Dependencies:**
+
+- Vue.js 3.5.17 - Progressive JavaScript framework
+- Vite 7.0.0 - Build tool and dev server
+- Pinia 3.0.3 - State management
+- Vue Router 4.5.1 - Client-side routing
+- PrimeVue 4.3.6 - UI component library
+- PrimeIcons 7.0.0 - Icon library
+- Tailwind CSS 4.1.12 - Utility-first CSS framework
+- ESLint 9.29.0 - Code linting
+- Prettier 3.5.3 - Code formatting
+
+**Backend Dependencies:**
+
+- @netlify/blobs 9.1.6 - File storage
+- Busboy 1.6.0 - File upload parsing
+- Nodemailer 6.10.1 - Email functionality
+- Netlify CLI 17.0.0 - Development tools
+
+**Development Tools:**
+
+- Vue DevTools - Component debugging
+- PostCSS - CSS processing
+- Autoprefixer - CSS vendor prefixes
 
 This architecture provides a solid foundation for building dynamic, schema-aware CRUD applications with Notion as the backend. The modular design makes it easy to extend with new field types, validation rules, and features while maintaining clean separation of concerns.
