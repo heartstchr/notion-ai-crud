@@ -4,12 +4,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 const HomeView = () => import('../views/HomeView.vue')
 const EditView = () => import('../views/EditView.vue')
 const AddView = () => import('../views/AddView.vue')
+const ChatView = () => import('../views/ChatView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
+      path: '/talent',
       name: 'home',
       component: HomeView,
     },
@@ -23,6 +24,11 @@ const router = createRouter({
       path: '/add',
       name: 'add',
       component: AddView,
+    },
+    {
+      path: '/',
+      name: 'ai',
+      component: ChatView,
     },
   ],
 })

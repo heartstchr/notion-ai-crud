@@ -37,6 +37,7 @@ declare module 'vue' {
     SearchFilterSkeleton: typeof import('./src/components/SearchFilterSkeleton.vue')['default']
     SelectField: typeof import('./src/components/field-renderers/SelectField.vue')['default']
     TableView: typeof import('./src/components/TableView.vue')['default']
+    TemplateEditor: typeof import('./src/components/TemplateEditor.vue')['default']
     Textarea: typeof import('primevue/textarea')['default']
     TextField: typeof import('./src/components/field-renderers/TextField.vue')['default']
     Toast: typeof import('primevue/toast')['default']

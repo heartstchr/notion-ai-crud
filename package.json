@@ -19,7 +19,9 @@
     "@netlify/blobs": "^9.1.6",
     "busboy": "^1.6.0",
     "dotenv": "^17.2.1",
-    "nodemailer": "^6.10.1"
+    "nodemailer": "^6.10.1",
+    "@google/generative-ai": "^0.21.0",
+    "@notionhq/client": "^2.2.15"
   },
   "devDependencies": {
     "netlify-cli": "^17.0.0"
