@@ -40,6 +40,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useItemStore } from '../stores/itemStore.js'
+import itemService from '../services/itemService.js'
 import ValidationService from '../services/validationService.js'
 import LoadingSkeleton from '../components/LoadingSkeleton.vue'
 import PageHeader from '../components/PageHeader.vue'
@@ -52,10 +53,10 @@ const toast = useToast()
 // Store
 const itemStore = useItemStore()
 
-// Computed properties from store
-const loading = computed(() => itemStore.loading)
-const error = computed(() => itemStore.error)
-const submitting = computed(() => itemStore.submitting)
+// Local loading state for database-specific forms
+const loading = ref(true)
+const error = ref('')
+const submitting = ref(false)
 
 // Local state
 const item = ref(null)
@@ -72,45 +73,55 @@ const isFormReady = computed(() => item.value && rawSchema.value && !loading.val
 // Methods
 const loadItem = async () => {
   const itemId = route.params.id
+  const databaseId = route.params.databaseId
+
   if (!itemId) return
 
+  loading.value = true
+  error.value = ''
+  formErrors.value = {}
+
   try {
-    isLoadingItem.value = true
-    formErrors.value = {}
+    let itemResult, schemaToUse, titleToUse
 
-    // Load item data and ensure schema is loaded
-    const [itemResult, schemaResult] = await Promise.all([
-      itemStore.fetchItem(itemId),
-      itemStore.ensureSchemaLoaded().then(() => itemStore.schema)
-    ])
+    if (databaseId) {
+      // Load item and schema for specific database
+      const [itemData, dbInfo] = await Promise.all([
+        itemService.getItem(itemId, databaseId),
+        itemService.getDatabaseInfo(databaseId)
+      ])
 
-    // Get database info (synchronous, no await needed)
-    const dbInfo = itemStore.getDatabaseInfo()
+      itemResult = itemData.result || itemData
+      schemaToUse = dbInfo?.schema
+      titleToUse = dbInfo?.title || 'Item'
 
-    // Use database info if available, otherwise fall back to schema from store
-    const schemaToUse = dbInfo?.schema || schemaResult
-    const titleToUse = dbInfo?.title || schemaResult?.title || 'Item'
+      console.log('EditView - Database context - itemData:', itemData)
+      console.log('EditView - Database context - itemResult:', itemResult)
+      console.log('EditView - Database context - schemaToUse:', schemaToUse)
+      console.log('EditView - Database context - itemResult keys:', Object.keys(itemResult))
+      console.log('EditView - Database context - schemaToUse properties keys:', Object.keys(schemaToUse?.properties || {}))
+    } else {
+      // Fallback to store-based approach
+      const [itemData, schemaData] = await Promise.all([
+        itemStore.fetchItem(itemId),
+        itemStore.ensureSchemaLoaded().then(() => itemStore.schema)
+      ])
+
+      const dbInfo = itemStore.getDatabaseInfo()
+      itemResult = itemData.result || itemData
+      schemaToUse = dbInfo?.schema || schemaData
+      titleToUse = dbInfo?.title || schemaData?.title || 'Item'
+    }
 
     if (!schemaToUse) {
-      toast.add({
-        severity: 'error',
-        summary: 'Schema Error',
-        detail: 'Failed to load database schema. Please try again.',
-        life: 3000
-      })
+      error.value = 'Failed to load database schema. Please try again.'
       return
     }
 
 
 
     if (!itemResult) {
-      toast.add({
-        severity: 'error',
-        summary: 'Item Not Found',
-        detail: 'The item you are trying to edit does not exist.',
-        life: 3000
-      })
-      router.push('/')
+      error.value = 'The item you are trying to edit does not exist.'
       return
     }
 
@@ -122,9 +133,12 @@ const loadItem = async () => {
     const enrichedProperties = schemaToUse?.properties
       ? Object.fromEntries(
         Object.entries(schemaToUse.properties).map(([fieldName, property]) => {
+          // Get the value from the flattened item data
+          const fieldValue = itemResult[fieldName] || ''
+
           const enrichedProperty = {
             ...property,
-            value: itemResult[fieldName] || '',
+            value: fieldValue,
             name: property.name || fieldName,
             // Ensure nested objects are preserved
             number: property.number || null,
@@ -134,7 +148,11 @@ const loadItem = async () => {
             format: property.type === 'number' ? (property.number?.format || property.format) : undefined
           }
 
-
+          console.log(`EditView - Field ${fieldName}:`, {
+            property,
+            fieldValue,
+            enrichedProperty
+          })
 
           return [fieldName, enrichedProperty]
         })
@@ -144,10 +162,14 @@ const loadItem = async () => {
     // Set enriched properties as item
     item.value = enrichedProperties
 
+    console.log('EditView - Final enrichedProperties:', enrichedProperties)
+    console.log('EditView - Final item.value:', item.value)
+
   } catch (err) {
     console.error('Error loading item:', err)
+    error.value = err.message || 'Failed to load item'
   } finally {
-    isLoadingItem.value = false
+    loading.value = false
   }
 }
 
@@ -169,6 +191,8 @@ const updateFormData = (newFormData) => {
 const submitForm = async () => {
   if (submitting.value) return // Prevent double submission
 
+  submitting.value = true
+
   try {
     formErrors.value = {}
 
@@ -186,7 +210,13 @@ const submitForm = async () => {
 
     // Update item
     const itemId = route.params.id
-    await itemStore.updateItem(itemId, formDataToSubmit, rawSchema.value)
+    const databaseId = route.params.databaseId
+
+    if (databaseId) {
+      await itemService.updateItem(itemId, formDataToSubmit, rawSchema.value, databaseId)
+    } else {
+      await itemStore.updateItem(itemId, formDataToSubmit, rawSchema.value)
+    }
 
     // Show success message
     toast.add({
@@ -198,13 +228,17 @@ const submitForm = async () => {
 
     // Navigate back after a brief delay for better UX
     await nextTick()
-    router.push('/')
+    const dbId = route.params.databaseId
+    if (dbId) {
+      router.push({ name: 'db-list', params: { databaseId: dbId } })
+    } else {
+      router.push('/')
+    }
 
   } catch (error) {
     console.error('Update failed:', error)
 
-    const errorMessage = itemStore.error ||
-      error?.message ||
+    const errorMessage = error?.message ||
       `Failed to update ${databaseTitle.value.toLowerCase()}`
 
     toast.add({
@@ -213,6 +247,8 @@ const submitForm = async () => {
       detail: errorMessage,
       life: 5000
     })
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -242,7 +278,12 @@ const formatLabel = (fieldName) => {
 }
 
 const goBack = () => {
-  router.push('/')
+  const dbId = route.params.databaseId
+  if (dbId) {
+    router.push({ name: 'db-list', params: { databaseId: dbId } })
+  } else {
+    router.push('/')
+  }
 }
 
 // Watch for route parameter changes

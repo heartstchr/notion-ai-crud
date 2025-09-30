@@ -415,7 +415,7 @@ const createNotionDatabase = async (schema) => {
     messages.value.push({
       id: Date.now() + Math.random(),
       role: 'assistant',
-      content: `✅ Great! I've successfully created the "${data.title}" database in your Notion workspace. You can access it at: ${data.url}`,
+      content: `✅ Great! I've successfully created the "${data.title}" database in your Notion workspace. You can access it at: <a href="${data.url}" target="_blank" class="text-blue-500 underline hover:text-blue-700">${data.url}</a>`,
       timestamp: new Date()
     })
 
@@ -617,7 +617,7 @@ const deployTemplateById = async (templateId, customizations = {}) => {
       messages.value.push({
         id: Date.now() + Math.random(),
         role: 'assistant',
-        content: `🚀 **Automation Success!** I've automatically created the "${data.database.title}" database for you based on your request. You can access it at: ${data.database.url}`,
+        content: `🚀 **Automation Success!** I've automatically created the "${data.database.title}" database for you based on your request. You can access it at: <a href="${data.database.url}" target="_blank" class="text-blue-500 underline hover:text-blue-700">${data.database.url}</a>`,
         timestamp: new Date()
       })
     }
@@ -646,7 +646,7 @@ const handleTemplateDeployed = (database) => {
   messages.value.push({
     id: Date.now() + Math.random(),
     role: 'assistant',
-    content: `✅ Template deployed successfully! Database "${database.title}" is now available in your Notion workspace.`,
+    content: `✅ Template deployed successfully! Database "${database.title}" is now available in your Notion workspace. <a href="${database.url}" target="_blank" class="text-blue-500 underline hover:text-blue-700">Open in Notion</a>`,
     timestamp: new Date()
   })
 

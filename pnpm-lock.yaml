@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@alcyone-labs/zod-to-json-schema':
+    specifier: ^4.0.10
+    version: 4.0.10(zod@4.1.11)
   '@google/generative-ai':
     specifier: ^0.21.0
     version: 0.21.0
@@ -23,6 +26,9 @@ dependencies:
   nodemailer:
     specifier: ^6.10.1
     version: 6.10.1
+  zod:
+    specifier: ^4.1.11
+    version: 4.1.11
 
 devDependencies:
   netlify-cli:
@@ -30,6 +36,14 @@ devDependencies:
     version: 17.38.1(@types/node@24.3.0)
 
 packages:
+
+  /@alcyone-labs/zod-to-json-schema@4.0.10(zod@4.1.11):
+    resolution: {integrity: sha512-TFsSpAPToqmqmT85SGHXuxoCwEeK9zUDvn512O9aBVvWRhSuy+VvAXZkifzsdllD3ncF0ZjUrf4MpBwIEixdWQ==}
+    peerDependencies:
+      zod: ^4.0.5
+    dependencies:
+      zod: 4.1.11
+    dev: false
 
   /@babel/code-frame@7.27.1:
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -8329,3 +8343,7 @@ packages:
   /zod@3.23.8:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
     dev: true
+
+  /zod@4.1.11:
+    resolution: {integrity: sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg==}
+    dev: false

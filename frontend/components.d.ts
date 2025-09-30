@@ -14,6 +14,7 @@ declare module 'vue' {
     CardView: typeof import('./src/components/CardView.vue')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
     ContactField: typeof import('./src/components/field-renderers/ContactField.vue')['default']
+    DatabaseMenu: typeof import('./src/components/DatabaseMenu.vue')['default']
     DateField: typeof import('./src/components/field-renderers/DateField.vue')['default']
     Dropdown: typeof import('primevue/dropdown')['default']
     EmptyState: typeof import('./src/components/EmptyState.vue')['default']

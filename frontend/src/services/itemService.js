@@ -40,8 +40,9 @@ class ItemService {
   }
 
   // Get database info directly from Notion
-  async getDatabaseInfo() {
-    const response = await this.apiRequest('/notion-crud?info=true')
+  async getDatabaseInfo(databaseId) {
+    const qs = databaseId ? `&database_id=${encodeURIComponent(databaseId)}` : ''
+    const response = await this.apiRequest(`/notion-crud?info=true${qs}`)
 
     if (response.success && response.database) {
       const extractedInfo = NotionMiddleware.extractDatabaseInfo(response.database)
@@ -53,8 +54,8 @@ class ItemService {
 
   // Get all items
   async getAllItems(options = {}) {
-    const { pageSize = 50, startCursor, useCache = true } = options
-    const cacheKey = `all_items_${pageSize}_${startCursor || 'first'}`
+    const { pageSize = 50, startCursor, useCache = true, databaseId } = options
+    const cacheKey = `all_items_${databaseId || 'default'}_${pageSize}_${startCursor || 'first'}`
 
     if (useCache && this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey)
@@ -66,6 +67,7 @@ class ItemService {
     const params = new URLSearchParams()
     if (pageSize) params.append('page_size', pageSize)
     if (startCursor) params.append('start_cursor', startCursor)
+    if (databaseId) params.append('database_id', databaseId)
 
     const endpoint = `/notion-crud?${params.toString()}`
     const response = await this.apiRequest(endpoint)
@@ -94,8 +96,8 @@ class ItemService {
   }
 
   // Get specific item
-  async getItem(id) {
-    const cacheKey = `item_${id}`
+  async getItem(id, databaseId) {
+    const cacheKey = `item_${databaseId || 'default'}_${id}`
 
     if (this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey)
@@ -104,7 +106,9 @@ class ItemService {
       }
     }
 
-    const response = await this.apiRequest(`/notion-crud?id=${id}`)
+    const response = await this.apiRequest(
+      `/notion-crud?id=${id}${databaseId ? `&database_id=${encodeURIComponent(databaseId)}` : ''}`,
+    )
 
     if (response.success && response.result) {
       const transformedResponse = NotionMiddleware.transformResultResponse(response)
@@ -126,14 +130,17 @@ class ItemService {
   }
 
   // Create new item
-  async createItem(data, schema = null) {
+  async createItem(data, schema = null, databaseId) {
     // Convert form data to Notion properties format
     const notionProperties = NotionMiddleware.convertToNotionProperties(data, schema)
 
-    const response = await this.apiRequest('/notion-crud', {
-      method: 'POST',
-      body: JSON.stringify(notionProperties),
-    })
+    const response = await this.apiRequest(
+      `/notion-crud${databaseId ? `?database_id=${encodeURIComponent(databaseId)}` : ''}`,
+      {
+        method: 'POST',
+        body: JSON.stringify(notionProperties),
+      },
+    )
 
     // Transform the response to match the frontend format
     if (response.success && response.result) {
@@ -147,14 +154,17 @@ class ItemService {
   }
 
   // Update item
-  async updateItem(id, data, schema = null) {
+  async updateItem(id, data, schema = null, databaseId) {
     // Convert form data to Notion properties format
     const notionProperties = NotionMiddleware.convertToNotionProperties(data, schema)
 
-    const response = await this.apiRequest(`/notion-crud?id=${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(notionProperties),
-    })
+    const response = await this.apiRequest(
+      `/notion-crud?id=${id}${databaseId ? `&database_id=${encodeURIComponent(databaseId)}` : ''}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(notionProperties),
+      },
+    )
 
     // Transform the response to match the frontend format
     if (response.success && response.result) {
@@ -170,11 +180,14 @@ class ItemService {
   }
 
   // Delete item
-  async deleteItem(id) {
+  async deleteItem(id, databaseId) {
     try {
-      const response = await this.apiRequest(`/notion-crud?id=${id}`, {
-        method: 'DELETE',
-      })
+      const response = await this.apiRequest(
+        `/notion-crud?id=${id}${databaseId ? `&database_id=${encodeURIComponent(databaseId)}` : ''}`,
+        {
+          method: 'DELETE',
+        },
+      )
 
       this.clearCacheByPattern('all_items_')
       this.cache.delete(`item_${id}`)

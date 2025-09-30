@@ -213,6 +213,10 @@ const props = defineProps({
   schema: {
     type: Object,
     default: null
+  },
+  editRoute: {
+    type: String,
+    default: '/edit'
   }
 })
 
@@ -697,7 +701,7 @@ const getOtherFieldsForHeader = () => {
 }
 
 const editItem = (item) => {
-  router.push(`/edit/${item.id}`)
+  router.push(`${props.editRoute}/${item.id}`)
 }
 
 const deleteItem = (item) => {

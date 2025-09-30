@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
-    <!-- Loading State - show until we have both schema and items ready -->
-    <div v-if="loading || (!schema || items.length === 0)">
+    <!-- Loading State - show only when actually loading -->
+    <div v-if="loading">
       <!-- Search and Filter Skeleton -->
       <SearchFilterSkeleton />
 
@@ -9,8 +9,8 @@
       <LoadingSkeleton :count="6" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" />
     </div>
 
-    <!-- Content (only show when we have both schema and items ready) -->
-    <div v-else-if="schema && items.length > 0" class="space-y-6">
+    <!-- Content (show when we have schema and items, or when we have schema but no items) -->
+    <div v-else-if="schema" class="space-y-6">
       <!-- Search and View Toggle -->
       <!-- Mobile Layout (stacked) -->
       <div class="flex flex-col gap-4 lg:hidden">
@@ -225,24 +225,32 @@
 
       <!-- Card View -->
       <div v-if="viewMode === 'card'">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-if="filteredItems.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <!-- Data Cards -->
           <CardView v-for="item in filteredItems" :key="item.id" :item="item" :schema="schema"
+            :editRoute="route.params.databaseId ? `/db/${route.params.databaseId}/edit` : '/edit'"
             @deleteItem="handleDeleteItem" />
 
           <!-- Loading More Skeletons -->
           <LoadingSkeleton v-if="loadingMore" :count="3" class="contents" />
         </div>
+        <!-- Empty state for card view -->
+        <EmptyState v-else @add-item="goToAdd" />
       </div>
 
       <!-- Table View -->
-      <TableView v-else-if="viewMode === 'table'" :items="filteredItems" :schema="schema"
-        @deleteItem="handleDeleteItem" />
+      <div v-else-if="viewMode === 'table'">
+        <TableView v-if="filteredItems.length > 0" :items="filteredItems" :schema="schema"
+          :editRoute="route.params.databaseId ? `/db/${route.params.databaseId}/edit` : '/edit'"
+          @deleteItem="handleDeleteItem" />
+        <!-- Empty state for table view -->
+        <EmptyState v-else @add-item="goToAdd" />
+      </div>
 
     </div>
 
-    <!-- Empty State (shown when no items OR no schema, and not loading) -->
-    <EmptyState v-else-if="showEmptyState" @add-item="goToAdd" />
+    <!-- Empty State (shown when no schema and not loading) -->
+    <EmptyState v-else-if="!schema && !loading" @add-item="goToAdd" />
 
     <!-- Load More -->
     <LoadMoreButton v-if="hasMore && !loading" :loading="loadingMore" @load-more="loadMore" />
@@ -256,11 +264,12 @@ import CardView from './CardView.vue'
 import TableView from './TableView.vue'
 import EmptyState from './EmptyState.vue'
 import SearchFilterSkeleton from './SearchFilterSkeleton.vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { computed, ref } from 'vue'
 import NotionMiddleware from '../services/notionMiddleware.js'
 
 const router = useRouter()
+const route = useRoute()
 
 // View mode state
 const viewMode = ref('card') // 'card' or 'table'
@@ -444,7 +453,12 @@ const toggleAvailableFilter = () => {
 }
 
 const goToAdd = () => {
-  router.push('/add')
+  // Check if we're in a database context (from route params)
+  if (route.params.databaseId) {
+    router.push({ name: 'db-add', params: { databaseId: route.params.databaseId } })
+  } else {
+    router.push('/add')
+  }
 }
 
 const handleDeleteItem = (id) => {

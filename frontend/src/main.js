@@ -10,6 +10,7 @@ import ConfirmationService from 'primevue/confirmationservice'
 
 import App from './App.vue'
 import router from './router'
+import DatabaseMenu from './components/DatabaseMenu.vue'
 
 // Create Vue 3 app with composition API
 const app = createApp(App)
@@ -34,6 +35,9 @@ app.use(PrimeVue, {
 // Register PrimeVue services
 app.use(ToastService)
 app.use(ConfirmationService)
+
+// Global components
+app.component('DatabaseMenu', DatabaseMenu)
 
 // Mount the app
 app.mount('#app')

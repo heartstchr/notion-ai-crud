@@ -48,7 +48,6 @@ export async function handler(event, context) {
       };
     }
 
-
     if (!parentPageId) {
       console.error("No parent page ID provided and no default configured");
       return {
@@ -90,13 +89,12 @@ export async function handler(event, context) {
       properties: {},
     };
 
-    // Convert schema properties to Notion format
+    // Use schema properties directly (already in Notion format)
     if (schema.properties) {
       for (const [propertyName, propertyConfig] of Object.entries(
         schema.properties
       )) {
-        databaseData.properties[propertyName] =
-          formatPropertyForNotion(propertyConfig);
+        databaseData.properties[propertyName] = propertyConfig;
       }
     }
 
@@ -178,104 +176,6 @@ export async function handler(event, context) {
         details: error.body || "No additional details available",
       }),
     };
-  }
-}
-
-// Helper function to format property configurations for Notion API
-function formatPropertyForNotion(propertyConfig) {
-  const { type, ...config } = propertyConfig;
-
-  switch (type) {
-    case "title":
-      return { title: {} };
-
-    case "rich_text":
-      return { rich_text: {} };
-
-    case "number":
-      return {
-        number: {
-          format: config.number?.format || "number",
-        },
-      };
-
-    case "select":
-      return {
-        select: {
-          options: config.select?.options || [],
-        },
-      };
-
-    case "multi_select":
-      return {
-        multi_select: {
-          options: config.multi_select?.options || [],
-        },
-      };
-
-    case "date":
-      return { date: {} };
-
-    case "people":
-      return { people: {} };
-
-    case "files":
-      return { files: {} };
-
-    case "checkbox":
-      return { checkbox: {} };
-
-    case "url":
-      return { url: {} };
-
-    case "email":
-      return { email: {} };
-
-    case "phone_number":
-      return { phone_number: {} };
-
-    case "formula":
-      return {
-        formula: {
-          expression: config.formula?.expression || "1",
-        },
-      };
-
-    case "relation":
-      return {
-        relation: {
-          data_source_id:
-            config.relation?.database_id ||
-            config.relation?.data_source_id ||
-            "",
-          type: config.relation?.type || "single_property",
-        },
-      };
-
-    case "rollup":
-      return {
-        rollup: {
-          relation_property_name: config.rollup?.relation_property_name || "",
-          rollup_property_name: config.rollup?.rollup_property_name || "",
-          function: config.rollup?.function || "count",
-        },
-      };
-
-    case "created_time":
-      return { created_time: {} };
-
-    case "created_by":
-      return { created_by: {} };
-
-    case "last_edited_time":
-      return { last_edited_time: {} };
-
-    case "last_edited_by":
-      return { last_edited_by: {} };
-
-    default:
-      // Default to rich_text for unknown types
-      return { rich_text: {} };
   }
 }
 

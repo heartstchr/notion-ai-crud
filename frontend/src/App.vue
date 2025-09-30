@@ -23,13 +23,15 @@ import logo from './assets/logo-crud.png'
               CRUD Web App
             </span>
           </router-link>
-          <div class="flex space-x-8">
+          <div class="flex space-x-8 items-center">
             <router-link to="/ai"
               class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
               active-class="text-blue-600 font-medium">
               <i class="pi pi-sparkles"></i>
               <span>AI Chat</span>
             </router-link>
+            <!-- Dynamic CRUD routes per Notion database under parent page -->
+            <DatabaseMenu />
           </div>
         </div>
       </div>

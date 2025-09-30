@@ -1,4 +1,94 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { z } from "zod";
+import { zodToJsonSchema } from "@alcyone-labs/zod-to-json-schema";
+
+// Zod schema for Notion database structure
+const NotionDatabaseSchema = z.object({
+  title: z.string().min(1, "Database title is required"),
+  description: z.string().optional(),
+  properties: z.record(
+    z.string(),
+    z.object({
+      title: z.object({}).optional(),
+      rich_text: z.object({}).optional(),
+      number: z
+        .object({
+          format: z
+            .enum([
+              "number",
+              "percent",
+              "dollar",
+              "euro",
+              "pound",
+              "yen",
+              "ruble",
+              "rupee",
+              "won",
+              "yuan",
+            ])
+            .optional(),
+        })
+        .optional(),
+      select: z
+        .object({
+          options: z.array(
+            z.object({
+              name: z.string(),
+              color: z
+                .enum([
+                  "default",
+                  "gray",
+                  "brown",
+                  "orange",
+                  "yellow",
+                  "green",
+                  "blue",
+                  "purple",
+                  "pink",
+                  "red",
+                ])
+                .optional(),
+            })
+          ),
+        })
+        .optional(),
+      multi_select: z
+        .object({
+          options: z.array(
+            z.object({
+              name: z.string(),
+              color: z
+                .enum([
+                  "default",
+                  "gray",
+                  "brown",
+                  "orange",
+                  "yellow",
+                  "green",
+                  "blue",
+                  "purple",
+                  "pink",
+                  "red",
+                ])
+                .optional(),
+            })
+          ),
+        })
+        .optional(),
+      date: z.object({}).optional(),
+      people: z.object({}).optional(),
+      files: z.object({}).optional(),
+      checkbox: z.object({}).optional(),
+      url: z.object({}).optional(),
+      email: z.object({}).optional(),
+      phone_number: z.object({}).optional(),
+      created_time: z.object({}).optional(),
+      created_by: z.object({}).optional(),
+      last_edited_time: z.object({}).optional(),
+      last_edited_by: z.object({}).optional(),
+    })
+  ),
+});
 
 const headers = {
   "Access-Control-Allow-Origin": "*",
@@ -97,13 +187,13 @@ Available Notion property types:
 - last_edited_time: Auto timestamp when modified
 - last_edited_by: Auto user who last edited
 
-IMPORTANT: When generating JSON schemas, use this exact format:
+IMPORTANT: You must return a valid JSON schema that matches the Notion API format exactly. The response must be parseable JSON that follows this structure:
+
 {
   "title": "Database Title",
   "description": "Database description",
   "properties": {
     "Property Name": {
-      "type": "property_type",
       "property_type": {
         // type-specific configuration
       }
@@ -111,29 +201,34 @@ IMPORTANT: When generating JSON schemas, use this exact format:
   }
 }
 
-For select/multi_select properties, include options:
-{
-  "Status": {
-    "type": "select",
-    "select": {
-      "options": [
-        {"name": "Option 1", "color": "blue"},
-        {"name": "Option 2", "color": "green"}
-      ]
-    }
-  }
-}
+Property types and their configurations:
+- title: {"title": {}}
+- rich_text: {"rich_text": {}}
+- number: {"number": {"format": "number"}}
+- select: {"select": {"options": [{"name": "Option 1", "color": "blue"}]}}
+- multi_select: {"multi_select": {"options": [{"name": "Tag 1", "color": "green"}]}}
+- date: {"date": {}}
+- people: {"people": {}}
+- files: {"files": {}}
+- checkbox: {"checkbox": {}}
+- url: {"url": {}}
+- email: {"email": {}}
+- phone_number: {"phone_number": {}}
+- created_time: {"created_time": {}}
+- created_by: {"created_by": {}}
+- last_edited_time: {"last_edited_time": {}}
+- last_edited_by: {"last_edited_by": {}}
 
-For relation properties, use data_source_id (not database_id):
-{
-  "Related Project": {
-    "type": "relation",
-    "relation": {
-      "data_source_id": "actual-uuid-here",
-      "type": "single_property"
-    }
-  }
-}
+The JSON must be valid and parseable. Do not include any text outside the JSON block.
+
+REQUIRED SCHEMA STRUCTURE (automatically generated from Zod schema):
+${JSON.stringify(
+  zodToJsonSchema(NotionDatabaseSchema, { name: "NotionDatabaseSchema" }),
+  null,
+  2
+)}
+
+This JSON Schema defines the exact structure your response must follow. Ensure your output matches this schema exactly.
 
 IMPORTANT: Do NOT use placeholder values like "TARGET_DATABASE_ID" in relation properties. Only include relation properties if you have actual database UUIDs to reference.
 
@@ -183,19 +278,45 @@ User request: ${message}`;
 
     // Try to extract JSON schema from the response
     let schema = null;
+    let explanation = text;
+
+    // First try to find JSON in code blocks
     const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
     if (jsonMatch) {
       try {
-        schema = JSON.parse(jsonMatch[1]);
+        const parsedSchema = JSON.parse(jsonMatch[1]);
+        // Validate the schema using Zod
+        const validatedSchema = NotionDatabaseSchema.parse(parsedSchema);
+        schema = validatedSchema;
+        explanation = text.substring(0, jsonMatch.index).trim();
       } catch (e) {
-        console.error("Failed to parse JSON schema:", e);
+        console.error("Failed to parse or validate JSON schema:", e);
+        // Try to find JSON without code blocks
+        const directJsonMatch = text.match(/\{[\s\S]*\}/);
+        if (directJsonMatch) {
+          try {
+            const parsedSchema = JSON.parse(directJsonMatch[0]);
+            const validatedSchema = NotionDatabaseSchema.parse(parsedSchema);
+            schema = validatedSchema;
+            explanation = text.substring(0, directJsonMatch.index).trim();
+          } catch (e2) {
+            console.error("Failed to parse direct JSON:", e2);
+          }
+        }
       }
-    }
-
-    // Extract only the explanation (text before JSON block)
-    let explanation = text;
-    if (jsonMatch) {
-      explanation = text.substring(0, jsonMatch.index).trim();
+    } else {
+      // Try to find JSON without code blocks
+      const directJsonMatch = text.match(/\{[\s\S]*\}/);
+      if (directJsonMatch) {
+        try {
+          const parsedSchema = JSON.parse(directJsonMatch[0]);
+          const validatedSchema = NotionDatabaseSchema.parse(parsedSchema);
+          schema = validatedSchema;
+          explanation = text.substring(0, directJsonMatch.index).trim();
+        } catch (e) {
+          console.error("Failed to parse direct JSON:", e);
+        }
+      }
     }
 
     return {

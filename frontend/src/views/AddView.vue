@@ -41,23 +41,25 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useItemStore } from '../stores/itemStore.js'
 import LoadingSkeleton from '../components/LoadingSkeleton.vue'
 import PageHeader from '../components/PageHeader.vue'
+import itemService from '../services/itemService.js'
 
 // Composables
 const router = useRouter()
+const route = useRoute()
 const toast = useToast()
 
 // Store
 const itemStore = useItemStore()
 
-// Computed properties from store
-const loading = computed(() => itemStore.loading)
-const submitting = computed(() => itemStore.submitting)
-const error = computed(() => itemStore.error)
+// Local loading state for database-specific forms
+const loading = ref(true)
+const submitting = ref(false)
+const error = ref('')
 
 // Local state
 const item = ref(null)
@@ -76,35 +78,48 @@ const VALIDATION_PATTERNS = {
 
 // Methods
 const loadSchema = async () => {
+  loading.value = true
+  error.value = ''
+
   try {
-    // Fetch schema from store
-    await itemStore.fetchSchema()
+    // Check if we're in a database context
+    const databaseId = route.params.databaseId
 
-    // Get database info (synchronous, no await needed)
-    const dbInfo = itemStore.getDatabaseInfo()
+    if (databaseId) {
+      // Load schema for specific database
+      const dbInfo = await itemService.getDatabaseInfo(databaseId)
+      const schemaToUse = dbInfo?.schema
+      const titleToUse = dbInfo?.title || 'Item'
 
-    // Use database info if available, otherwise fall back to schema from store
-    const schemaToUse = dbInfo?.schema || itemStore.schema
-    const titleToUse = dbInfo?.title || itemStore.schema?.title || 'Item'
+      if (!schemaToUse) {
+        error.value = 'Failed to load database schema. Please try again.'
+        return
+      }
 
-    if (!schemaToUse) {
-      toast.add({
-        severity: 'error',
-        summary: 'Schema Error',
-        detail: 'Failed to load database schema. Please try again.',
-        life: 3000
-      })
-      return
+      // Set raw schema and database title
+      rawSchema.value = schemaToUse
+      databaseTitle.value = titleToUse
+    } else {
+      // Fallback to store-based approach
+      await itemStore.fetchSchema()
+      const dbInfo = itemStore.getDatabaseInfo()
+      const schemaToUse = dbInfo?.schema || itemStore.schema
+      const titleToUse = dbInfo?.title || itemStore.schema?.title || 'Item'
+
+      if (!schemaToUse) {
+        error.value = 'Failed to load database schema. Please try again.'
+        return
+      }
+
+      // Set raw schema and database title
+      rawSchema.value = schemaToUse
+      databaseTitle.value = titleToUse
     }
 
-    // Set raw schema and database title
-    rawSchema.value = schemaToUse
-    databaseTitle.value = titleToUse
-
     // Create enriched properties with empty values for new item
-    const enrichedProperties = schemaToUse?.properties
+    const enrichedProperties = rawSchema.value?.properties
       ? Object.fromEntries(
-        Object.entries(schemaToUse.properties).map(([fieldName, property]) => {
+        Object.entries(rawSchema.value.properties).map(([fieldName, property]) => {
           const enrichedProperty = {
             ...property,
             value: '', // Empty values for new item
@@ -128,6 +143,9 @@ const loadSchema = async () => {
 
   } catch (err) {
     console.error('Failed to load database schema:', err)
+    error.value = err.message || 'Failed to load database schema'
+  } finally {
+    loading.value = false
   }
 }
 
@@ -149,6 +167,8 @@ const updateFormData = (newFormData) => {
 const submitForm = async () => {
   if (submitting.value) return // Prevent double submission
 
+  submitting.value = true
+
   try {
     formErrors.value = {}
 
@@ -165,7 +185,12 @@ const submitForm = async () => {
     }
 
     // Create new item
-    await itemStore.createItem(formDataToSubmit)
+    const databaseId = route.params.databaseId
+    if (databaseId) {
+      await itemService.createItem(formDataToSubmit, rawSchema.value, databaseId)
+    } else {
+      await itemStore.createItem(formDataToSubmit)
+    }
 
     // Show success message
     toast.add({
@@ -177,13 +202,16 @@ const submitForm = async () => {
 
     // Navigate back after a brief delay for better UX
     await nextTick()
-    router.push('/')
+    if (databaseId) {
+      router.push({ name: 'db-list', params: { databaseId } })
+    } else {
+      router.push('/')
+    }
 
   } catch (error) {
     console.error('Create failed:', error)
 
-    const errorMessage = itemStore.error ||
-      error?.message ||
+    const errorMessage = error?.message ||
       `Failed to add ${databaseTitle.value.toLowerCase()}`
 
     toast.add({
@@ -192,6 +220,8 @@ const submitForm = async () => {
       detail: errorMessage,
       life: 5000
     })
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -256,7 +286,12 @@ const formatLabel = (fieldName) => {
 }
 
 const goBack = () => {
-  router.push('/')
+  const dbId = route.params.databaseId
+  if (dbId) {
+    router.push({ name: 'db-list', params: { databaseId: dbId } })
+  } else {
+    router.push('/')
+  }
 }
 
 // Lifecycle
