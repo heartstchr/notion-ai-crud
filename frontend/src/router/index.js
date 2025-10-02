@@ -36,7 +36,7 @@ const router = createRouter({
     {
       path: '/db/:databaseId',
       name: 'db-list',
-      component: DbListView,
+      component: HomeView,
       props: true,
     },
     {

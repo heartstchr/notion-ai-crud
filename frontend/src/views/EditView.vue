@@ -94,12 +94,6 @@ const loadItem = async () => {
       itemResult = itemData.result || itemData
       schemaToUse = dbInfo?.schema
       titleToUse = dbInfo?.title || 'Item'
-
-      console.log('EditView - Database context - itemData:', itemData)
-      console.log('EditView - Database context - itemResult:', itemResult)
-      console.log('EditView - Database context - schemaToUse:', schemaToUse)
-      console.log('EditView - Database context - itemResult keys:', Object.keys(itemResult))
-      console.log('EditView - Database context - schemaToUse properties keys:', Object.keys(schemaToUse?.properties || {}))
     } else {
       // Fallback to store-based approach
       const [itemData, schemaData] = await Promise.all([

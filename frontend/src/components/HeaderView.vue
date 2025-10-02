@@ -39,9 +39,10 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 
 defineProps({
   loading: {
@@ -66,6 +67,11 @@ const refreshSchema = () => {
 }
 
 const goToAdd = () => {
-  router.push('/add')
+  // Check if we're in a database context (from route params)
+  if (route.params.databaseId) {
+    router.push({ name: 'db-add', params: { databaseId: route.params.databaseId } })
+  } else {
+    router.push('/add')
+  }
 }
 </script>
