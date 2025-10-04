@@ -6,7 +6,7 @@ export const config = {
 };
 
 // Constants
-const NOTION_API_VERSION = "2022-06-28";
+const NOTION_API_VERSION = "2025-09-03";
 const NOTION_BASE_URL = "https://api.notion.com/v1";
 
 // CORS headers
@@ -30,6 +30,7 @@ export default async function handler(request, context) {
   const recordId = url.searchParams.get("id");
   const databaseId =
     url.searchParams.get("database_id") || process.env.NOTION_DATABASE_ID;
+  const dataSourceId = url.searchParams.get("data_source_id");
 
   if (!notionApiKey || !databaseId) {
     return createErrorResponse("Notion API key or Database ID missing", 500);
@@ -46,13 +47,19 @@ export default async function handler(request, context) {
           return await getAllRecords(
             databaseId,
             notionApiKey,
-            url.searchParams
+            url.searchParams,
+            dataSourceId
           );
         }
 
       case "POST":
         const createData = await request.json();
-        return await createRecord(databaseId, createData, notionApiKey);
+        return await createRecord(
+          databaseId,
+          createData,
+          notionApiKey,
+          dataSourceId
+        );
 
       case "PUT":
         if (!recordId) {
@@ -232,8 +239,13 @@ async function getDatabaseInfo(databaseId, notionApiKey) {
   });
 }
 
-// Get all records from database
-async function getAllRecords(databaseId, notionApiKey, searchParams) {
+// Get all records from database or data source
+async function getAllRecords(
+  databaseId,
+  notionApiKey,
+  searchParams,
+  dataSourceId
+) {
   const page_size = parseInt(searchParams.get("page_size")) || 100;
   const start_cursor = searchParams.get("start_cursor");
 
@@ -242,25 +254,44 @@ async function getAllRecords(databaseId, notionApiKey, searchParams) {
     body.start_cursor = start_cursor;
   }
 
-  // Check for archived property and add filter if it exists
-  try {
-    const schema = await makeNotionRequest(
-      `/databases/${databaseId}`,
-      {},
-      notionApiKey
-    );
-    if (schema.properties.archived) {
-      body.filter = {
-        property: "archived",
-        checkbox: { equals: false },
-      };
+  // In API 2025-09-03, we always need to query data sources, not databases directly
+  let endpoint;
+  let actualDataSourceId = dataSourceId;
+
+  if (!dataSourceId) {
+    // Get the first data source from the database for backward compatibility
+    try {
+      const schema = await makeNotionRequest(
+        `/databases/${databaseId}`,
+        {},
+        notionApiKey
+      );
+
+      if (schema.data_sources && schema.data_sources.length > 0) {
+        actualDataSourceId = schema.data_sources[0].id;
+      } else {
+        throw new Error("No data sources found in database");
+      }
+
+      // Check for archived property and add filter if it exists
+      if (schema.properties && schema.properties.archived) {
+        body.filter = {
+          property: "archived",
+          checkbox: { equals: false },
+        };
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to get data source from database: ${error.message}`
+      );
     }
-  } catch (error) {
-    // Silently proceed without filter if archived property check fails
   }
 
+  // Query the data source
+  endpoint = `/data_sources/${actualDataSourceId}/query`;
+
   const data = await makeNotionRequest(
-    `/databases/${databaseId}/query`,
+    endpoint,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -274,6 +305,7 @@ async function getAllRecords(databaseId, notionApiKey, searchParams) {
     results: data.results,
     has_more: data.has_more,
     next_cursor: data.next_cursor,
+    dataSourceId: actualDataSourceId,
   });
 }
 
@@ -288,14 +320,43 @@ async function getRecord(recordId, notionApiKey) {
 }
 
 // Create new record
-async function createRecord(databaseId, properties, notionApiKey) {
+async function createRecord(
+  databaseId,
+  properties,
+  notionApiKey,
+  dataSourceId
+) {
+  // In API 2025-09-03, we always need to create pages in data sources, not databases directly
+  let actualDataSourceId = dataSourceId;
+
+  if (!dataSourceId) {
+    // Get the first data source from the database for backward compatibility
+    try {
+      const schema = await makeNotionRequest(
+        `/databases/${databaseId}`,
+        {},
+        notionApiKey
+      );
+
+      if (schema.data_sources && schema.data_sources.length > 0) {
+        actualDataSourceId = schema.data_sources[0].id;
+      } else {
+        throw new Error("No data sources found in database");
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to get data source from database: ${error.message}`
+      );
+    }
+  }
+
   const page = await makeNotionRequest(
     "/pages",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        parent: { database_id: databaseId },
+        parent: { data_source_id: actualDataSourceId },
         properties,
       }),
     },
@@ -307,6 +368,7 @@ async function createRecord(databaseId, properties, notionApiKey) {
       success: true,
       result: page,
       message: "Record created successfully",
+      dataSourceId: actualDataSourceId,
     },
     201
   );

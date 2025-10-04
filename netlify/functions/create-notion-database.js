@@ -1,5 +1,7 @@
 import { Client } from "@notionhq/client";
 
+const NOTION_API_VERSION = "2025-09-03";
+
 const headers = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",

@@ -8,12 +8,14 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AnimatedBackground: typeof import('./src/components/AnimatedBackground.vue')['default']
     BooleanField: typeof import('./src/components/field-renderers/BooleanField.vue')['default']
     Button: typeof import('primevue/button')['default']
     Calendar: typeof import('primevue/calendar')['default']
     CardView: typeof import('./src/components/CardView.vue')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
     ContactField: typeof import('./src/components/field-renderers/ContactField.vue')['default']
+    DatabaseEditModal: typeof import('./src/components/DatabaseEditModal.vue')['default']
     DatabaseMenu: typeof import('./src/components/DatabaseMenu.vue')['default']
     DateField: typeof import('./src/components/field-renderers/DateField.vue')['default']
     Dropdown: typeof import('primevue/dropdown')['default']
@@ -30,6 +32,7 @@ declare module 'vue' {
     LoadingSkeleton: typeof import('./src/components/LoadingSkeleton.vue')['default']
     LoadMoreButton: typeof import('./src/components/LoadMoreButton.vue')['default']
     MultiSelect: typeof import('primevue/multiselect')['default']
+    MultiSourceEditModal: typeof import('./src/components/MultiSourceEditModal.vue')['default']
     NumbersField: typeof import('./src/components/field-renderers/NumbersField.vue')['default']
     PageHeader: typeof import('./src/components/PageHeader.vue')['default']
     RichTextField: typeof import('./src/components/field-renderers/RichTextField.vue')['default']

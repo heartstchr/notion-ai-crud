@@ -76,7 +76,7 @@ onMounted(() => {
 
     <div v-if="databaseMenuStore.isOpen"
       class="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-      <div class="max-h-80 overflow-auto divide-y divide-gray-100">
+      <div class="max-h-80 scrollbar-auto-hide divide-y divide-gray-100">
         <div v-if="databaseMenuStore.isLoading" class="px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
           <i class="pi pi-spin pi-spinner"></i>
           Loading...

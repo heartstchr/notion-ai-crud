@@ -1,6 +1,6 @@
 // List Notion databases under NOTION_PARENT_PAGE_ID
 
-const NOTION_API_VERSION = "2022-06-28";
+const NOTION_API_VERSION = "2025-09-03";
 const NOTION_BASE_URL = "https://api.notion.com/v1";
 
 const headers = {
@@ -76,7 +76,7 @@ export async function handler(event) {
       nextCursor = children.has_more ? children.next_cursor : undefined;
     } while (nextCursor);
 
-    // Enrich each database with url/properties
+    // Enrich each database with url/properties and data sources
     const enriched = [];
     for (const db of results) {
       try {
@@ -88,7 +88,12 @@ export async function handler(event) {
         });
         if (dbRes.ok) {
           const dbJson = await dbRes.json();
-          enriched.push({
+
+          // Check if database has multiple data sources
+          const hasMultipleDataSources =
+            dbJson.data_sources && dbJson.data_sources.length > 1;
+
+          const enrichedDb = {
             id: db.id,
             title:
               db.title ||
@@ -98,7 +103,18 @@ export async function handler(event) {
             last_edited_time: dbJson.last_edited_time,
             created_time: dbJson.created_time,
             properties: Object.keys(dbJson.properties || {}),
-          });
+            hasMultipleDataSources,
+            dataSources: dbJson.data_sources || [],
+            // For backward compatibility, if single data source, expose it as the main database
+            ...(hasMultipleDataSources
+              ? {}
+              : {
+                  // Single data source - maintain backward compatibility
+                  dataSourceId: dbJson.data_sources?.[0]?.id || db.id,
+                }),
+          };
+
+          enriched.push(enrichedDb);
         } else {
           enriched.push({ id: db.id, title: db.title || "Untitled" });
         }

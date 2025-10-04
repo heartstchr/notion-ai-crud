@@ -2,11 +2,51 @@
 import { RouterView } from 'vue-router'
 import ConfirmDialog from 'primevue/confirmdialog'
 import logo from './assets/logo-crud.png'
+import { onMounted, onUnmounted } from 'vue'
+
+// Scroll event handling for auto-hide scrollbar
+let scrollTimeout = null
+
+const handleScroll = () => {
+  // Add scrolling class to body
+  document.body.classList.add('scrolling')
+  
+  // Clear existing timeout
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout)
+  }
+  
+  // Set timeout to remove scrolling class after scroll stops
+  scrollTimeout = setTimeout(() => {
+    document.body.classList.remove('scrolling')
+  }, 150) // Hide scrollbar 150ms after scroll stops
+}
+
+onMounted(() => {
+  // Add scrollbar-auto-hide class to body
+  document.body.classList.add('scrollbar-auto-hide')
+  
+  // Add scroll event listener
+  window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  // Clean up event listener
+  window.removeEventListener('scroll', handleScroll)
+  
+  // Clear timeout
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout)
+  }
+  
+  // Remove classes
+  document.body.classList.remove('scrollbar-auto-hide', 'scrolling')
+})
 </script>
 
 
 <template>
-  <div id="app" class="min-h-screen bg-gray-50">
+  <div id="app" class="min-h-screen bg-gray-50 flex flex-col">
     <nav class="bg-white border-b border-gray-200 relative sticky top-0 z-50">
       <!-- Gradient Shadow -->
       <div
@@ -37,7 +77,7 @@ import logo from './assets/logo-crud.png'
       </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-1">
       <RouterView />
     </main>
 

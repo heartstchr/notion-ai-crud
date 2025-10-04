@@ -95,7 +95,7 @@
         </div>
 
         <!-- Table Content Skeleton -->
-        <div class="overflow-x-auto">
+        <div class="scrollbar-auto-hide">
           <table class="w-full">
             <thead class="bg-gray-50 border-b border-gray-200">
               <tr>

@@ -1,6 +1,8 @@
 import { Client } from "@notionhq/client";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+const NOTION_API_VERSION = "2025-09-03";
+
 const headers = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",
@@ -15,9 +17,8 @@ const DATABASE_TEMPLATES = {
     description:
       "Complete project management system with tasks, timelines, and team collaboration",
     properties: {
-      "Project Name": { type: "title", title: {} },
+      "Project Name": { title: {} },
       Status: {
-        type: "select",
         select: {
           options: [
             { name: "Planning", color: "gray" },
@@ -29,7 +30,6 @@ const DATABASE_TEMPLATES = {
         },
       },
       Priority: {
-        type: "select",
         select: {
           options: [
             { name: "Low", color: "gray" },
@@ -39,14 +39,13 @@ const DATABASE_TEMPLATES = {
           ],
         },
       },
-      "Team Lead": { type: "people", people: {} },
-      "Start Date": { type: "date", date: {} },
-      "Due Date": { type: "date", date: {} },
-      Progress: { type: "number", number: { format: "percent" } },
-      Budget: { type: "number", number: { format: "dollar" } },
-      Description: { type: "rich_text", rich_text: {} },
+      "Team Lead": { people: {} },
+      "Start Date": { date: {} },
+      "Due Date": { date: {} },
+      Progress: { number: { format: "percent" } },
+      Budget: { number: { format: "dollar" } },
+      Description: { rich_text: {} },
       Tags: {
-        type: "multi_select",
         multi_select: {
           options: [
             { name: "Frontend", color: "blue" },
@@ -82,12 +81,11 @@ const DATABASE_TEMPLATES = {
     description:
       "Comprehensive CRM system for managing customer relationships and sales pipeline",
     properties: {
-      "Company Name": { type: "title", title: {} },
-      "Contact Person": { type: "rich_text", rich_text: {} },
-      Email: { type: "email", email: {} },
-      Phone: { type: "phone_number", phone_number: {} },
+      "Company Name": { title: {} },
+      "Contact Person": { rich_text: {} },
+      Email: { email: {} },
+      Phone: { phone_number: {} },
       Status: {
-        type: "select",
         select: {
           options: [
             { name: "Lead", color: "yellow" },
@@ -99,7 +97,6 @@ const DATABASE_TEMPLATES = {
         },
       },
       Industry: {
-        type: "select",
         select: {
           options: [
             { name: "Technology", color: "blue" },
@@ -110,11 +107,11 @@ const DATABASE_TEMPLATES = {
           ],
         },
       },
-      "Deal Value": { type: "number", number: { format: "dollar" } },
-      "Last Contact": { type: "date", date: {} },
-      "Next Follow-up": { type: "date", date: {} },
-      Notes: { type: "rich_text", rich_text: {} },
-      Website: { type: "url", url: {} },
+      "Deal Value": { number: { format: "dollar" } },
+      "Last Contact": { date: {} },
+      "Next Follow-up": { date: {} },
+      Notes: { rich_text: {} },
+      Website: { url: {} },
     },
     sampleData: [
       {
@@ -136,9 +133,8 @@ const DATABASE_TEMPLATES = {
     description:
       "Organize articles, resources, documentation, and knowledge assets",
     properties: {
-      Title: { type: "title", title: {} },
+      Title: { title: {} },
       Type: {
-        type: "select",
         select: {
           options: [
             { name: "Article", color: "blue" },
@@ -150,7 +146,6 @@ const DATABASE_TEMPLATES = {
         },
       },
       Status: {
-        type: "select",
         select: {
           options: [
             { name: "Draft", color: "gray" },
@@ -160,9 +155,8 @@ const DATABASE_TEMPLATES = {
           ],
         },
       },
-      Author: { type: "people", people: {} },
+      Author: { people: {} },
       Category: {
-        type: "multi_select",
         multi_select: {
           options: [
             { name: "Development", color: "blue" },
@@ -172,13 +166,12 @@ const DATABASE_TEMPLATES = {
           ],
         },
       },
-      Tags: { type: "multi_select", multi_select: { options: [] } },
-      URL: { type: "url", url: {} },
-      "Created Date": { type: "created_time", created_time: {} },
-      "Last Updated": { type: "last_edited_time", last_edited_time: {} },
-      Summary: { type: "rich_text", rich_text: {} },
+      Tags: { multi_select: { options: [] } },
+      URL: { url: {} },
+      "Created Date": { created_time: {} },
+      "Last Updated": { last_edited_time: {} },
+      Summary: { rich_text: {} },
       Priority: {
-        type: "select",
         select: {
           options: [
             { name: "Low", color: "gray" },
@@ -195,9 +188,8 @@ const DATABASE_TEMPLATES = {
     description:
       "Comprehensive event planning system with timeline, vendors, and attendees",
     properties: {
-      "Event Name": { type: "title", title: {} },
+      "Event Name": { title: {} },
       "Event Type": {
-        type: "select",
         select: {
           options: [
             { name: "Conference", color: "blue" },
@@ -209,7 +201,6 @@ const DATABASE_TEMPLATES = {
         },
       },
       Status: {
-        type: "select",
         select: {
           options: [
             { name: "Planning", color: "gray" },
@@ -220,13 +211,13 @@ const DATABASE_TEMPLATES = {
           ],
         },
       },
-      "Event Date": { type: "date", date: {} },
-      Location: { type: "rich_text", rich_text: {} },
-      "Expected Attendees": { type: "number", number: {} },
-      Budget: { type: "number", number: { format: "dollar" } },
-      "Event Manager": { type: "people", people: {} },
-      Vendors: { type: "multi_select", multi_select: { options: [] } },
-      Notes: { type: "rich_text", rich_text: {} },
+      "Event Date": { date: {} },
+      Location: { rich_text: {} },
+      "Expected Attendees": { number: {} },
+      Budget: { number: { format: "dollar" } },
+      "Event Manager": { people: {} },
+      Vendors: { multi_select: { options: [] } },
+      Notes: { rich_text: {} },
     },
   },
 };
@@ -280,6 +271,9 @@ export async function handler(event, context) {
     switch (action) {
       case "list_templates":
         return listTemplates();
+
+      case "get_template_schema":
+        return getTemplateSchema(payload);
 
       case "deploy_template":
         return await deployTemplate(payload);
@@ -354,6 +348,46 @@ function listTemplates() {
           ...workflow,
         })
       ),
+    }),
+  };
+}
+
+// Get template schema for editing
+function getTemplateSchema(payload) {
+  const { templateId } = payload;
+
+  if (!templateId || !DATABASE_TEMPLATES[templateId]) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ error: "Template not found" }),
+    };
+  }
+
+  const template = DATABASE_TEMPLATES[templateId];
+
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify({
+      template: {
+        id: templateId,
+        title: template.title,
+        description: template.description,
+        properties: template.properties,
+        sampleData: template.sampleData,
+      },
+      schema: {
+        title: template.title,
+        description: template.description,
+        dataSources: [
+          {
+            name: template.title,
+            description: template.description,
+            properties: template.properties
+          }
+        ]
+      },
     }),
   };
 }
@@ -821,98 +855,106 @@ function formatPropertiesForNotion(properties) {
 
 // Helper function to format individual property configurations for Notion API
 function formatPropertyForNotion(propertyConfig) {
-  const { type, ...config } = propertyConfig;
+  // Handle both old format (with type field) and new format (direct Notion API format)
+  if (propertyConfig.type) {
+    // Old format with type field
+    const { type, ...config } = propertyConfig;
 
-  switch (type) {
-    case "title":
-      return { title: {} };
+    switch (type) {
+      case "title":
+        return { title: {} };
 
-    case "rich_text":
-      return { rich_text: {} };
+      case "rich_text":
+        return { rich_text: {} };
 
-    case "number":
-      return {
-        number: {
-          format: config.number?.format || "number",
-        },
-      };
+      case "number":
+        return {
+          number: {
+            format: config.number?.format || "number",
+          },
+        };
 
-    case "select":
-      return {
-        select: {
-          options: config.select?.options || [],
-        },
-      };
+      case "select":
+        return {
+          select: {
+            options: config.select?.options || [],
+          },
+        };
 
-    case "multi_select":
-      return {
-        multi_select: {
-          options: config.multi_select?.options || [],
-        },
-      };
+      case "multi_select":
+        return {
+          multi_select: {
+            options: config.multi_select?.options || [],
+          },
+        };
 
-    case "date":
-      return { date: {} };
+      case "date":
+        return { date: {} };
 
-    case "people":
-      return { people: {} };
+      case "people":
+        return { people: {} };
 
-    case "files":
-      return { files: {} };
+      case "files":
+        return { files: {} };
 
-    case "checkbox":
-      return { checkbox: {} };
+      case "checkbox":
+        return { checkbox: {} };
 
-    case "url":
-      return { url: {} };
+      case "url":
+        return { url: {} };
 
-    case "email":
-      return { email: {} };
+      case "email":
+        return { email: {} };
 
-    case "phone_number":
-      return { phone_number: {} };
+      case "phone_number":
+        return { phone_number: {} };
 
-    case "formula":
-      return {
-        formula: {
-          expression: config.formula?.expression || "1",
-        },
-      };
+      case "formula":
+        return {
+          formula: {
+            expression: config.formula?.expression || "1",
+          },
+        };
 
-    case "relation":
-      return {
-        relation: {
-          data_source_id:
-            config.relation?.database_id ||
-            config.relation?.data_source_id ||
-            "",
-          type: config.relation?.type || "single_property",
-        },
-      };
+      case "relation":
+        return {
+          relation: {
+            data_source_id:
+              config.relation?.database_id ||
+              config.relation?.data_source_id ||
+              "",
+            type: config.relation?.type || "single_property",
+          },
+        };
 
-    case "rollup":
-      return {
-        rollup: {
-          relation_property_name: config.rollup?.relation_property_name || "",
-          rollup_property_name: config.rollup?.rollup_property_name || "",
-          function: config.rollup?.function || "count",
-        },
-      };
+      case "rollup":
+        return {
+          rollup: {
+            relation_property_name: config.rollup?.relation_property_name || "",
+            rollup_property_name: config.rollup?.rollup_property_name || "",
+            function: config.rollup?.function || "count",
+          },
+        };
 
-    case "created_time":
-      return { created_time: {} };
+      case "created_time":
+        return { created_time: {} };
 
-    case "created_by":
-      return { created_by: {} };
+      case "created_by":
+        return { created_by: {} };
 
-    case "last_edited_time":
-      return { last_edited_time: {} };
+      case "last_edited_time":
+        return { last_edited_time: {} };
 
-    case "last_edited_by":
-      return { last_edited_by: {} };
+      case "last_edited_by":
+        return { last_edited_by: {} };
 
-    default:
-      // Default to rich_text for unknown types
-      return { rich_text: {} };
+      default:
+        // Default to rich_text for unknown types
+        return { rich_text: {} };
+    }
+  } else {
+    // New format - direct Notion API format (current DATABASE_TEMPLATES format)
+    // The propertyConfig is already in the correct Notion API format
+    return propertyConfig;
   }
 }
